@@ -3,6 +3,7 @@ from PIL import Image, ImageDraw, ImageFont
 import numpy as np
 from transformers import AutoProcessor, AutoModelForZeroShotObjectDetection
 from datasets import load_dataset
+import os
 
 def draw_boxes(image, results):
     # Create a copy of the image to draw on
@@ -96,7 +97,7 @@ if __name__ == "__main__":
     processor = AutoProcessor.from_pretrained(model_id)
     model = AutoModelForZeroShotObjectDetection.from_pretrained(model_id).to(device)
     dataset = load_dataset("ntudlcv/dlcv_2024_final1", split="test", streaming=True)
-    make_dir("dino_samples")
+    os.makedirs("dino_samples", exist_ok = True)
     for item in dataset:
         image = item["image"]
         results = detect(image, model, processor, device)

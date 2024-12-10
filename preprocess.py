@@ -69,6 +69,7 @@ def draw_boxes(image, objects):
         draw.text((box[0]+2, box[1]-text_height-2), label_text, fill=color)
     
     return image
+
 def detect_objects(image, model, processor, device="cuda"):
     text = "car . truck . bus . motorcycle . bicycle . tricycle . van . suv . trailer . construction vehicle . moped . recreational vehicle . pedestrian . cyclist . wheelchair . stroller . traffic light . traffic sign . traffic cone . traffic island . traffic box . barrier . bollard . warning sign . debris . machinery . dustbin . concrete block . cart . chair . basket . suitcase . dog . phone booth ."
     
@@ -121,6 +122,7 @@ def get_position(bbox, image_width):
         return "middle"
     else:
         return "right"
+    
 def process_image(image, depth_pipe, obj_model, obj_processor, device):
     # Object detection
     detection_results = detect_objects(image, obj_model, obj_processor, device)
@@ -156,6 +158,68 @@ def process_image(image, depth_pipe, obj_model, obj_processor, device):
     
     return objects
 
+def clear_objects(task, objects, image, image_id):
+    if task == "general":
+        return objects
+    
+    elif task == "suggestion":
+        return objects
+    
+    elif task == "regional" :
+        img_np = np.array(image)
+        img_np = cv2.cvtColor(img_np, cv2.COLOR_RGB2BGR)
+        
+        # Define range for red color in BGR
+        lower_red = np.array([0, 0, 150])
+        upper_red = np.array([50, 50, 255])
+        mask = cv2.inRange(img_np, lower_red, upper_red)
+        contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        
+        if contours:
+            largest_contour = max(contours, key=cv2.contourArea)
+            x, y, w, h = cv2.boundingRect(largest_contour)
+            red_box = [x, y, x+w, y+h]
+            
+            # Find object with highest IoU
+            best_obj = None
+            best_iou = 0.4  # Minimum IoU threshold
+            
+            for obj in objects:
+                obj_box = obj['bbox']
+                iou = calculate_iou(red_box, obj_box)
+                if iou > best_iou:
+                    best_iou = iou
+                    best_obj = obj
+            
+            # Print clean output
+            print(f"\nImage {image_id}:", end=" ")
+            if best_obj:
+                print(best_obj['label'])
+                return [best_obj]  # Return as list for compatibility with draw_boxes
+            else:
+                print("Nothing found in red box")
+                return []
+            
+        print(f"\nImage {image_id}: No red box detected")
+        return []
+
+def calculate_iou(box1, box2):
+    """
+    Calculate Intersection over Union (IoU) between two boxes
+    """
+    x1 = max(box1[0], box2[0])
+    y1 = max(box1[1], box2[1])
+    x2 = min(box1[2], box2[2])
+    y2 = min(box1[3], box2[3])
+    
+    if x1 < x2 and y1 < y2:
+        intersection = (x2 - x1) * (y2 - y1)
+        box1_area = (box1[2] - box1[0]) * (box1[3] - box1[1])
+        box2_area = (box2[2] - box2[0]) * (box2[3] - box2[1])
+        union = box1_area + box2_area - intersection
+        return intersection / union
+    return 0.0
+    
 def main():
     # Initialize models
     device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -169,7 +233,8 @@ def main():
     os.makedirs(output_dir, exist_ok=True)
     
     # Load dataset
-    dataset = load_dataset("ntudlcv/dlcv_2024_final1", split="test",streaming=True)
+    dataset = load_dataset("ntudlcv/dlcv_2024_final1", split="val",streaming=True)
+    dataset = dataset.take(100)
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=4)
     # Process each image
     print("Processing images...")
@@ -180,18 +245,24 @@ def main():
                     bar_format='{l_bar}{bar}| {n_fmt} [{elapsed}, {rate_fmt}{postfix}]'):
         
         image_id = item['id']
+        task = image_id.split('_')[1]
+            
         image = item['image']
         
         # Process image and get results
-        objects = process_image(image, depth_pipe, obj_model, obj_processor, device)
+        objects = process_image(image, depth_pipe, obj_model, obj_processor, device) # after DINO and depth anything
         
-
-        # Store results
         annotated_image = draw_boxes(image.copy(), objects)
         annotated_image.save(os.path.join(output_dir, f"{image_id}_detected.jpg"))
         
-        results[image_id] = objects
+        objects = clear_objects(task, objects, image, image_id)
+        print(objects)
 
+        if task != "regional":    
+            results[image_id] = objects
+        else:
+            # Store results (store the label if object found, None otherwise)
+            results[image_id] = objects if objects else None
     
     # Save metadata
     with open(os.path.join(output_dir, "train_metadata.json"), "w") as f:
