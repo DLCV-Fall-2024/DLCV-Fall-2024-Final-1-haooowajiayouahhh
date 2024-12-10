@@ -12,7 +12,7 @@ dataset = load_dataset("ntudlcv/dlcv_2024_final1", split="test", streaming=True)
 output_dir = "/workspace/DLCV-Fall-2024-Final-1-haooowajiayouahhh/Depth-Anything/outputs"
 
 
-def depth_estimation(item):
+def depth_estimation(item,visualize=False):
     """
     Estimate depth for an object within a bounding box and categorize it into ranges.
     
@@ -33,8 +33,9 @@ def depth_estimation(item):
         depth_image = F.interpolate(depth_map_tensor[None, None], (h, w), mode='bilinear', align_corners=False)[0, 0]
         depth_image = (depth_image - depth_image.min()) / (depth_image.max() - depth_image.min()) * 255.0
         depth_image = depth_image.cpu().numpy().astype(np.uint8)
-        depth_image = cv2.applyColorMap(depth_image, cv2.COLORMAP_INFERNO)
-        cv2.imwrite(os.path.join(output_dir, f"{item['id']}_depth.png"), depth_image)
+        if visualize:
+            depth_image = cv2.applyColorMap(depth_image, cv2.COLORMAP_INFERNO)
+            cv2.imwrite(os.path.join(output_dir, f"{item['id']}_depth.png"), depth_image)
         
         # Extract the region of interest using the bbox
         x1, y1, x2, y2 = map(int, bbox)
@@ -68,6 +69,6 @@ def depth_estimation(item):
 if __name__ == "__main__":
     bbox = (50, 50, 150, 150)
     for item in dataset:
-        print(type(item['image']))
+        # print(type(item['image']))
         item = depth_estimation(item)
-        
+        print(item)        
