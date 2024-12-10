@@ -1,5 +1,5 @@
 import torch
-from PIL import Image
+from PIL import Image,ImageDraw
 import numpy as np
 from transformers import AutoProcessor, AutoModelForZeroShotObjectDetection, pipeline
 from datasets import load_dataset
@@ -9,19 +9,65 @@ import os
 import json
 from tqdm import tqdm
 
-def draw_boxes(image, results):
-    draw = ImageDraw.Draw(image)
-    colors = [(255, 0, 0), (0, 255, 0), (0, 0, 255)]  # Simplified colors for brevity
+# def draw_boxes(image, results):
+#     draw = ImageDraw.Draw(image)
+#     colors = [(255, 0, 0), (0, 255, 0), (0, 0, 255)]  # Simplified colors for brevity
     
-    for score, label, box in zip(results[0]['scores'], results[0]['labels'], results[0]['boxes']):
-        box = box.cpu().numpy()
-        box = [int(x) for x in box]
-        color = colors[results[0]['labels'].index(label) % len(colors)]
+#     for score, label, box in zip(results[0]['scores'], results[0]['labels'], results[0]['boxes']):
+#         box = box.cpu().numpy()
+#         box = [int(x) for x in box]
+#         color = colors[results[0]['labels'].index(label) % len(colors)]
+#         draw.rectangle(box, outline=color, width=3)
+#         label_text = f"{label}: {score:.2f}"
+#         draw.text((box[0], box[1]-20), label_text, fill=color)
+#     return image
+def draw_boxes(image, objects):
+    """
+    Draw bounding boxes on the image with labels including depth category
+    
+    Args:
+        image: PIL Image object
+        objects: List of dictionaries containing detection and depth information
+        
+    Returns:
+        PIL Image with drawn boxes and labels
+    """
+    draw = ImageDraw.Draw(image)
+    colors = {
+        "immediate": (255, 0, 0),     # Red for immediate range
+        "short range": (0, 255, 0),   # Green for short range
+        "midrange": (0, 0, 255),      # Blue for mid range
+        "long range": (255, 165, 0)   # Orange for long range
+    }
+    
+    for obj in objects:
+        box = obj['bbox']
+        label = obj['label']
+        depth_category = obj['depth_category']
+        color = colors[depth_category]
+        
+        # Draw bounding box
         draw.rectangle(box, outline=color, width=3)
-        label_text = f"{label}: {score:.2f}"
-        draw.text((box[0], box[1]-20), label_text, fill=color)
+        
+        # Create label text with both object class and depth category
+        label_text = f"{label} ({depth_category})"
+        print(label_text)
+        
+        # Calculate text size to create background rectangle
+        text_bbox = draw.textbbox((0, 0), label_text)
+        text_width = text_bbox[2] - text_bbox[0]
+        text_height = text_bbox[3] - text_bbox[1]
+        
+        # Draw semi-transparent background for text
+        draw.rectangle(
+            [box[0], box[1]-text_height-4, box[0]+text_width+4, box[1]],
+            fill=(0, 0, 0, 128)
+        )
+        
+        # Draw text
+        draw.text((box[0]+2, box[1]-text_height-2), label_text, fill=color)
+    
     return image
-
 def detect_objects(image, model, processor, device="cuda"):
     text = "car . truck . bus . motorcycle . bicycle . tricycle . van . suv . trailer . construction vehicle . moped . recreational vehicle . pedestrian . cyclist . wheelchair . stroller . traffic light . traffic sign . traffic cone . traffic island . traffic box . barrier . bollard . warning sign . debris . machinery . dustbin . concrete block . cart . chair . basket . suitcase . dog . phone booth ."
     
@@ -41,15 +87,16 @@ def detect_objects(image, model, processor, device="cuda"):
 
 def get_depth_category(depth_value):
     thresholds = {
-        0.3: "immediate",
-        0.5: "short range",
-        0.7: "midrange"
+        1.0:"immediate",
+        0.6: "short range",
+        0.4: "midrange",
+        0.2: "long range"
     }
     
     for threshold, category in sorted(thresholds.items()):
-        if depth_value <= threshold:
+        if depth_value <=threshold:
             return category
-    return "long range"
+    # return "long range"
 
 def process_image(image, depth_pipe, obj_model, obj_processor, device):
     # Object detection
@@ -64,17 +111,19 @@ def process_image(image, depth_pipe, obj_model, obj_processor, device):
     depth_map_tensor = torch.tensor(depth_map)
     depth_map = F.interpolate(depth_map_tensor[None, None], (h, w), mode='bilinear', align_corners=False)[0, 0]
     depth_map = depth_map.cpu().numpy()
-    
+    depth_max=depth_map.max()
+    depth_min=depth_map.min()
     # Process each detected object
     objects = []
     for score, label, box in zip(detection_results[0]['scores'], detection_results[0]['labels'], detection_results[0]['boxes']):
         box = box.cpu().numpy().astype(int)
         roi_depth = depth_map[box[1]:box[3], box[0]:box[2]]
         avg_depth = float(np.mean(roi_depth))
-        
+        avg_depth=(avg_depth-depth_min)/(depth_max-depth_min)
+        # print("avg_depth: ",avg_depth)
         objects.append({
             "label": label,
-            "confidence": float(score),
+            # "confidence": float(score),
             "bbox": box.tolist(),
             "depth_value": avg_depth,
             "depth_category": get_depth_category(avg_depth)
@@ -107,17 +156,11 @@ def main():
         # Process image and get results
         objects = process_image(image, depth_pipe, obj_model, obj_processor, device)
         
-        # # Save detection visualization
-        # annotated_image = draw_boxes(image.copy(), detection_results)
+
+        # Store results
+        # annotated_image = draw_boxes(image.copy(), objects)
         # annotated_image.save(os.path.join(output_dir, f"{image_id}_detected.jpg"))
         
-        # Save depth visualization
-        # depth_map = depth_result["predicted_depth"]
-        # depth_vis = ((depth_map - depth_map.min()) / (depth_map.max() - depth_map.min()) * 255).astype(np.uint8)
-        # depth_vis = cv2.applyColorMap(depth_vis, cv2.COLORMAP_INFERNO)
-        # cv2.imwrite(os.path.join(output_dir, f"{image_id}_depth.png"), depth_vis)
-        
-        # Store results
         results[image_id] = objects
 
     
