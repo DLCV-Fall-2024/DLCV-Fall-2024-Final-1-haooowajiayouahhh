@@ -21,6 +21,43 @@ from tqdm import tqdm
 #         label_text = f"{label}: {score:.2f}"
 #         draw.text((box[0], box[1]-20), label_text, fill=color)
 #     return image
+coda_categories = {
+    'vehicles': [
+        'car', 'truck', 'bus', 'van', 'suv', 'trailer', 'construction vehicle', 'recreational vehicle'
+    ],
+    
+    'vulnerable_road_users': [
+        'pedestrian', 'cyclist', 'motorcycle', 'bicycle', 'tricycle', 'moped', 'wheelchair', 'stroller'
+    ],
+    
+    'traffic_signs': [
+        'traffic sign', 'warning sign'
+    ],
+    
+    'traffic_lights': [
+        'traffic light'
+    ],
+    
+    'traffic_cones': [
+        'traffic cone'
+    ],
+    
+    'barriers': [
+        'barrier', 'bollard', 'concrete block'
+    ],
+    
+    'other_objects': [
+        'traffic island', 'traffic box', 'debris', 'machinery', 'dustbin', 'cart', 'chair', 'basket', 'suitcase', 'dog', 'phone booth'
+    ]
+}
+
+def get_object_category(label):
+    """Find which CODA category an object belongs to"""
+    for category, objects in coda_categories.items():
+        if label.lower() in objects:
+            return category
+    return "other_objects"
+
 def draw_boxes(image, objects):
     """
     Draw bounding boxes on the image with labels including depth category
@@ -34,11 +71,12 @@ def draw_boxes(image, objects):
     """
     draw = ImageDraw.Draw(image)
     colors = {
-        "immediate": (255, 0, 0),     # Red for immediate range
-        "short range": (0, 255, 0),   # Green for short range
-        "mid range": (0, 0, 255),      # Blue for mid range
-        "long range": (255, 165, 0)   # Orange for long range
+        "immediate": (255, 0, 0),       # Red for immediate range
+        "short range": (255, 165, 0),   # Orange for short range
+        "mid range": (255, 255, 0),     # Yellow for mid range
+        "long range": (0, 255, 0)       # Green for long range
     }
+
     
     for obj in objects:
         box = obj['bbox']
@@ -81,7 +119,7 @@ def detect_objects(image, model, processor, device="cuda"):
     results = processor.post_process_grounded_object_detection(
         outputs,
         inputs.input_ids,
-        box_threshold=0.3,
+        box_threshold=0.27,
         text_threshold=0.25,
         target_sizes=[image.size[::-1]]
     )
@@ -99,6 +137,7 @@ def get_depth_category(depth_value):
         if depth_value <=threshold:
             return category
     # return "long range"
+    
 def get_position(bbox, image_width):
     """
     Determine the horizontal position of an object based on its bounding box center
@@ -158,12 +197,55 @@ def process_image(image, depth_pipe, obj_model, obj_processor, device):
     
     return objects
 
-def clear_objects(task, objects, image, image_id):
+def format_objects(task, objects, image, image_id):
+    """
+    Format detected objects into CODA-LM categories
+    
+    Args:
+        task: "general", "suggestion", or "regional"
+        objects: List of detected objects with their properties
+        image: PIL Image object
+        image_id: Image identifier
+        
+    Returns:
+        For general/suggestion: Dictionary with 7 CODA categories
+        For regional: List of objects in red box
+    """
     if task == "general":
-        return objects
+        formatted_result = {
+            'vehicles': [],
+            'vulnerable_road_users': [],
+            'traffic_signs': [],
+            'traffic_lights': [],
+            'traffic_cones': [],
+            'barriers': [],
+            'other_objects': []
+        }
+        
+        # Sort each object into its appropriate category
+        for obj in objects:
+            category = get_object_category(obj['label'])
+            formatted_result[category].append(obj)
+            
+        return formatted_result
     
     elif task == "suggestion":
-        return objects
+        formatted_result = {
+            'vehicles': [],
+            'vulnerable_road_users': [],
+            'traffic_signs': [],
+            'traffic_lights': [],
+            'traffic_cones': [],
+            'barriers': [],
+            'other_objects': []
+        }
+        
+        # Sort each object into its appropriate category
+        for obj in objects:
+            category = get_object_category(obj['label'])
+            formatted_result[category].append(obj)
+            
+        return formatted_result
     
     elif task == "regional" :
         img_np = np.array(image)
@@ -192,10 +274,10 @@ def clear_objects(task, objects, image, image_id):
                     best_obj = obj
             
             # Print clean output
-            print(f"\nImage {image_id}:", end=" ")
+            # print(f"\nImage {image_id}:", end=" ")
             if best_obj:
-                print(best_obj['label'])
-                return [best_obj]  # Return as list for compatibility with draw_boxes
+                # print(best_obj['label'])
+                return [best_obj]
             else:
                 print("Nothing found in red box")
                 return []
@@ -233,8 +315,8 @@ def main():
     os.makedirs(output_dir, exist_ok=True)
     
     # Load dataset
-    dataset = load_dataset("ntudlcv/dlcv_2024_final1", split="val",streaming=True)
-    dataset = dataset.take(100)
+    dataset = load_dataset("ntudlcv/dlcv_2024_final1", split="test",streaming=True)
+    # dataset = dataset.take(200)
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=4)
     # Process each image
     print("Processing images...")
@@ -251,18 +333,15 @@ def main():
         
         # Process image and get results
         objects = process_image(image, depth_pipe, obj_model, obj_processor, device) # after DINO and depth anything
-        
+        # save coda'd images
         annotated_image = draw_boxes(image.copy(), objects)
         annotated_image.save(os.path.join(output_dir, f"{image_id}_detected.jpg"))
         
-        objects = clear_objects(task, objects, image, image_id)
-        print(objects)
+        formatted_objects = format_objects(task, objects, image, image_id)
+        print(f"\nImage {image_id}:", end=" ")
+        print(formatted_objects)
 
-        if task != "regional":    
-            results[image_id] = objects
-        else:
-            # Store results (store the label if object found, None otherwise)
-            results[image_id] = objects if objects else None
+        results[image_id] = formatted_objects
     
     # Save metadata
     with open(os.path.join(output_dir, "train_metadata.json"), "w") as f:
