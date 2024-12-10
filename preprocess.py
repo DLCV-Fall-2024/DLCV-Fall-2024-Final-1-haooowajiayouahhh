@@ -265,7 +265,7 @@ def format_objects(task, objects, image, image_id):
             
             # Find object with highest IoU
             best_obj = None
-            best_iou = 0.4  # Minimum IoU threshold
+            best_iou = 0.8  # Minimum IoU threshold
             
             for obj in objects:
                 obj_box = obj['bbox']
