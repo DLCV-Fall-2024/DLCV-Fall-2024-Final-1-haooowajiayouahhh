@@ -121,6 +121,29 @@ def get_position(bbox, image_width):
         return "middle"
     else:
         return "right"
+def get_position(bbox, image_width):
+    """
+    Determine the horizontal position of an object based on its bounding box center
+    
+    Args:
+        bbox: List of [x1, y1, x2, y2] coordinates
+        image_width: Width of the full image
+        
+    Returns:
+        str: 'left', 'middle', or 'right'
+    """
+    # Calculate center x-coordinate of the bounding box
+    center_x = (bbox[0] + bbox[2]) / 2
+    
+    # Define the boundaries for three equal sections
+    third_width = image_width / 3
+    
+    if center_x < third_width:
+        return "left"
+    elif center_x < 2 * third_width:
+        return "middle"
+    else:
+        return "right"
 def process_image(image, depth_pipe, obj_model, obj_processor, device):
     # Object detection
     detection_results = detect_objects(image, obj_model, obj_processor, device)
@@ -145,11 +168,14 @@ def process_image(image, depth_pipe, obj_model, obj_processor, device):
         avg_depth=(avg_depth-depth_min)/(depth_max-depth_min)
         # print("avg_depth: ",avg_depth)
         position = get_position(box, w)
+        position = get_position(box, w)
         objects.append({
             "label": label,
             # "confidence": float(score),
             "bbox": box.tolist(),
             "depth_value": avg_depth,
+            "depth_category": get_depth_category(avg_depth),
+            "position":position
             "depth_category": get_depth_category(avg_depth),
             "position":position
         })
@@ -174,6 +200,11 @@ def main():
     # Process each image
     print("Processing images...")
     results = {}
+
+    for item in tqdm(dataset, 
+                    desc="Processing",
+                    bar_format='{l_bar}{bar}| {n_fmt} [{elapsed}, {rate_fmt}{postfix}]'):
+        
 
     for item in tqdm(dataset, 
                     desc="Processing",
