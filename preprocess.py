@@ -8,6 +8,7 @@ import cv2
 import os
 import json
 from tqdm import tqdm
+from utils.get_object_vec import create_object_presence_vector
 
 # def draw_boxes(image, results):
 #     draw = ImageDraw.Draw(image)
