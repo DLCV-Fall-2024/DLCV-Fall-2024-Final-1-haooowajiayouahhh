@@ -87,9 +87,9 @@ def detect_objects(image, model, processor, device="cuda"):
 
 def get_depth_category(depth_value):
     thresholds = {
-        1.0:"immediate",
+        1.0: "immediate",
         0.6: "short range",
-        0.4: "midrange",
+        0.4: "mid range",
         0.2: "long range"
     }
     
