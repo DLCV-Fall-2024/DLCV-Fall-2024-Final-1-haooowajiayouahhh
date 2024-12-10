@@ -7,4 +7,6 @@ val/
 *.json
 *.ipynb
 .txt
+vit-images/*
 !few_shot/**/*.json
+
