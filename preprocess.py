@@ -214,7 +214,6 @@ def format_objects(task, objects, image, image_id):
     """
     if task == "general":
         formatted_result = {
-            'image_id': image_id,
             'vehicles': [],
             'vulnerable_road_users': [],
             'traffic_signs': [],
@@ -233,7 +232,6 @@ def format_objects(task, objects, image, image_id):
     
     elif task == "suggestion":
         formatted_result = {
-            'image_id': image_id,
             'vehicles': [],
             'vulnerable_road_users': [],
             'traffic_signs': [],
@@ -341,8 +339,8 @@ def main():
         annotated_image.save(os.path.join(output_dir, f"{image_id}_detected.jpg"))
         
         formatted_objects = format_objects(task, objects, image, image_id)
-        print(f"\nImage {image_id}:", end=" ")
-        print(formatted_objects)
+        # print(f"\nImage {image_id}:", end=" ")
+        # print(formatted_objects)
 
         results[image_id] = formatted_objects
     

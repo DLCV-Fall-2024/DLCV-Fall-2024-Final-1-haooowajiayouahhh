@@ -9,4 +9,7 @@ val/
 .txt
 vit-images/*
 !few_shot/**/*.json
-
+*.jpg
+*.db
+*faiss
+*.arrow
