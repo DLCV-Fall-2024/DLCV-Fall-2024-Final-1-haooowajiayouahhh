@@ -214,6 +214,7 @@ def format_objects(task, objects, image, image_id):
     """
     if task == "general":
         formatted_result = {
+            'image_id': image_id,
             'vehicles': [],
             'vulnerable_road_users': [],
             'traffic_signs': [],
@@ -232,6 +233,7 @@ def format_objects(task, objects, image, image_id):
     
     elif task == "suggestion":
         formatted_result = {
+            'image_id': image_id,
             'vehicles': [],
             'vulnerable_road_users': [],
             'traffic_signs': [],
