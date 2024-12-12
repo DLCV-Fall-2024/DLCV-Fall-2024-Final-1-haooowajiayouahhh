@@ -120,7 +120,7 @@ def detect_objects(image, model, processor, device="cuda"):
     results = processor.post_process_grounded_object_detection(
         outputs,
         inputs.input_ids,
-        box_threshold=0.27,
+        box_threshold=0.3,
         text_threshold=0.25,
         target_sizes=[image.size[::-1]]
     )
@@ -162,11 +162,47 @@ def get_position(bbox, image_width):
         return "middle"
     else:
         return "right"
+
+def clean_label(label):
+    # Get all valid labels from coda_categories
+    valid_labels = []
+    for category in coda_categories.values():
+        valid_labels.extend(category)
+        
+    # If label is already valid, return it
+    if label.lower() in valid_labels:
+        return label
     
+    print("error label, needs processing: ", label)
+    # First try: find valid labels that appear as substrings in the invalid label
+    matches = []
+    for valid in valid_labels:
+        if valid in label.lower():
+            matches.append(valid)
+            
+    if matches:
+        return matches[-1]  # Return the last match
+        
+    # Second try: find valid labels that contain the invalid label as a substring
+    label_parts = label.lower().split()
+    for part in label_parts:
+        matches = []
+        for valid in valid_labels:
+            if part in valid:
+                matches.append(valid)
+        if matches:
+            return matches[-1]
+            
+    # If no matches found, return original label
+    print("ERROR!!!!!!!!!!!!!!!!!!!!!!!!", label)
+    return label
+
+invalid_labels = []
+  
 def process_image(image, depth_pipe, obj_model, obj_processor, device):
     # Object detection
     detection_results = detect_objects(image, obj_model, obj_processor, device)
-    
+    # print(detection_results)
     # Depth estimation
     depth_result = depth_pipe(image)
     depth_map = np.array(depth_result["predicted_depth"])
@@ -187,7 +223,23 @@ def process_image(image, depth_pipe, obj_model, obj_processor, device):
         avg_depth=(avg_depth-depth_min)/(depth_max-depth_min)
         # print("avg_depth: ",avg_depth)
         position = get_position(box, w)
+    
+        
+        label = clean_label(label)
+        label_found = False
+        for category_objects in coda_categories.values():
+            if label.lower() in category_objects:
+                label_found = True
+                break
+            
+        # If label not found in any category, add to invalid_labels
+        if not label_found and label not in invalid_labels:
+            invalid_labels.append(label)
+            print(label)
+        
+            
         objects.append({
+            # "score": score,
             "label": label,
             # "confidence": float(score),
             "bbox": box.tolist(),
@@ -265,7 +317,7 @@ def format_objects(task, objects, image, image_id):
             
             # Find object with highest IoU
             best_obj = None
-            best_iou = 0.8  # Minimum IoU threshold
+            best_iou = 0.7  # Minimum IoU threshold
             
             for obj in objects:
                 obj_box = obj['bbox']
@@ -350,3 +402,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+    unique_invalid_labels = sorted(set(invalid_labels))  # Convert to set to remove duplicates
+    print("\nUnique Invalid Labels:")
+    for label in unique_invalid_labels:
+        print(label)
