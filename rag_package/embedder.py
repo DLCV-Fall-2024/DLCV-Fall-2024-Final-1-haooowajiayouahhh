@@ -13,9 +13,9 @@ from dlcv_datasets import create_small_subset
 class ImageEmbedder:
     def __init__(self, dataset_name="ntudlcv/dlcv_2024_final1", model_name="google/vit-base-patch16-224", test_mode=False):
         if test_mode:
-            dataset = create_small_subset(dataset_name=dataset_name, split="test", num_samples=10)
+            dataset = create_small_subset(dataset_name=dataset_name, split="train", num_samples=200)
         else:
-            dataset = load_dataset(dataset_name, split="test")
+            dataset = load_dataset(dataset_name, split="train")
         self.model = ViTModel.from_pretrained(model_name)
         self.dataset = ImageDataset(dataset)
         self.feature_extractor = ViTFeatureExtractor.from_pretrained(model_name)
@@ -49,11 +49,11 @@ class ImageEmbedder:
                 all_embeddings.extend(embeddings)
                 all_ids.extend(batch_ids)
                 
-                # Save embeddings
-                for embedding, idx in zip(embeddings, batch_ids):
-                    save_path = os.path.join(output_dir, f'{idx}.npy')
+                # # Save embeddings
+                # for embedding, idx in zip(embeddings, batch_ids):
+                #     save_path = os.path.join(output_dir, f'{idx}.npy')
 
-                    np.save(save_path, embedding)
+                #     np.save(save_path, embedding)
         # print(f"all_embeddings_shape: {np.array(all_embeddings).shape}")
         # print(f"all_ids_shape: {np.array(all_ids).shape}")
         return all_embeddings, all_ids

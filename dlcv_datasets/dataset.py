@@ -1,6 +1,7 @@
 from transformers import ViTImageProcessor
 from PIL import Image
 from torch.utils.data import Dataset
+import numpy as np
 
 class ImageDataset(Dataset):
     def __init__(self, dataset):
@@ -18,3 +19,4 @@ class ImageDataset(Dataset):
     
     def __len__(self):
         return len(self.dataset)
+    

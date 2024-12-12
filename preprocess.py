@@ -368,8 +368,8 @@ def main():
     os.makedirs(output_dir, exist_ok=True)
     
     # Load dataset
-    dataset = load_dataset("ntudlcv/dlcv_2024_final1", split="test",streaming=True)
-    # dataset = dataset.take(200)
+    dataset = load_dataset("ntudlcv/dlcv_2024_final1", split="train",streaming=True)
+    dataset = dataset.take(200)
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=4)
     # Process each image
     print("Processing images...")
@@ -383,7 +383,6 @@ def main():
         task = image_id.split('_')[1]
             
         image = item['image']
-        
         # Process image and get results
         objects = process_image(image, depth_pipe, obj_model, obj_processor, device) # after DINO and depth anything
         # save coda'd images
