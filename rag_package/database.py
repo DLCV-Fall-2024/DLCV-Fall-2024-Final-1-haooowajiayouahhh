@@ -2,13 +2,14 @@ import faiss
 import sqlite3
 import json
 import numpy as np
+import os
 
 class FAISSDatabase:
     def __init__(self, index_path, metadata_path="metadata.db"):
         self.vit_emb = faiss.IndexFlatL2(768)
         self.obj_pre_vec = faiss.IndexFlatL2(34)
-        self.vit_emb_index_path = index_path + "vit_emb.faiss"
-        self.obj_pre_vec_index_path = index_path + "obj_pre_vec.faiss"
+        self.vit_emb_index_path = os.path.join(index_path, "vit_emb.faiss")
+        self.obj_pre_vec_index_path = os.path.join(index_path, "obj_pre_vec.faiss")
         self.conn = sqlite3.connect(metadata_path)
         self._create_metadata_table()
 
@@ -70,7 +71,7 @@ class JSONDataProcessor:
                             idx = categories.index(obj['label'].lower())
                             presence_vector[idx] = 1
                         except ValueError:
-                            print(f"Warning: Unknown object label {obj['label']}")
+                            print(f"MWarning: Unknown object label {obj['label']}")
                             continue
                 presence_vector = np.array(presence_vector)
                 self.presence_vector_list.append((presence_vector, image_id))

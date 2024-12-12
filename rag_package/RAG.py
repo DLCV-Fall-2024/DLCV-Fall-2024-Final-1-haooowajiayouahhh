@@ -11,16 +11,16 @@ class RAG:
         self.model_name = self.config["model_name"]
         self.vit_embedder = ImageEmbedder(self.dataset_name, self.model_name, test_mode = self.config["testing"])
         self.json_data = JSONDataProcessor(self.config["JSON_PATH"])
-        self.database = FAISSDatabase(self.config["FAISS_PATH"])
+        self.database = FAISSDatabase(self.config["FAISS_PATH"], self.config["METADATA_PATH"])
         self.set_vit_embedding()
         self.set_obj_presence_vector()
 
-        print(f"Metadata saved to {os.path.join(os.getcwd(), self.config['METADATA_PATH'])}!")
+        print(f"Metadata saved to {self.config['METADATA_PATH']}!")
         self.database.save()
         print(f"Encoding vectors saved to {config['FAISS_PATH']}!")
 
-        self.vit_emb_query = RAGQuery(config["FAISS_PATH"]+"vit_emb.faiss", config["METADATA_PATH"])
-        self.obj_pre_query = RAGQuery(config["FAISS_PATH"]+"obj_pre_vec.faiss", config["METADATA_PATH"])
+        self.vit_emb_query = RAGQuery(os.path.join(config["FAISS_PATH"], "vit_emb.faiss"), config["METADATA_PATH"])
+        self.obj_pre_query = RAGQuery(os.path.join(config["FAISS_PATH"], "obj_pre_vec.faiss"), config["METADATA_PATH"])
 
 
     def set_vit_embedding(self):

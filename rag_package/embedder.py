@@ -13,7 +13,7 @@ from dlcv_datasets import create_small_subset
 class ImageEmbedder:
     def __init__(self, dataset_name="ntudlcv/dlcv_2024_final1", model_name="google/vit-base-patch16-224", test_mode=False):
         if test_mode:
-            dataset = create_small_subset(dataset_name=dataset_name, split="train", num_samples=10)
+            dataset = create_small_subset(dataset_name=dataset_name, split="train", num_samples=200)
         else:
             dataset = load_dataset(dataset_name, split="train")
         self.model = ViTModel.from_pretrained(model_name)

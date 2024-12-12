@@ -42,7 +42,7 @@ def preprocess_single_image(image, task="general"):
     # Format results according to task
     formatted_objects = format_objects(task, objects, image, "single_image")
     
-    return formatted_objects, annotated_image
+    return formatted_objects
 
 def preprocess_batch_images(images, batch_ids):
     """
@@ -68,13 +68,13 @@ def preprocess_batch_images(images, batch_ids):
     # annotated_images = {}
     
     # Process each image in the batch
-    for image, image_id in zip(images, batch_ids):
-         # Default to 'general' if task not specified
-        if 'general' in image_id['id']:
+    for image, image_id in zip(images, batch_ids): 
+        # Default to 'general' if task not specified
+        if 'general' in image_id:
             task = 'general'
-        elif 'regional' in image_id['id']:
+        elif 'regional' in image_id:
             task = 'regional'
-        elif 'suggestion' in image_id['id']:
+        elif 'suggestion' in image_id:
             task = 'suggestion'
         else:
             task = 'general' 

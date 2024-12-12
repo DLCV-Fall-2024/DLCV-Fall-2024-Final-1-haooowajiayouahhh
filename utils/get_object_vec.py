@@ -34,7 +34,7 @@ def create_single_object_presence_vector(formatted_output):
             except ValueError:
                 print(f"Warning: Unknown object label {obj['label']}")
                 continue
-                
+    presence_vector = np.array(presence_vector)
     return presence_vector
 
 def object_vec_dist(output1, output2):
