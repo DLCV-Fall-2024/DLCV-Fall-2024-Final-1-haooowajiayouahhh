@@ -19,4 +19,16 @@ class ImageDataset(Dataset):
     
     def __len__(self):
         return len(self.dataset)
+
+
+class ConversationDataset(Dataset):
+    def __init__(self, dataset):
+        self.dataset = dataset
+        self.id2conv = {item['id']: item['conversations'] for item in dataset}  
+
+    def __getitem__(self, idx):
+
+        return dataset[idx]
     
+    def __len__(self):
+        return len(self.dataset)    
