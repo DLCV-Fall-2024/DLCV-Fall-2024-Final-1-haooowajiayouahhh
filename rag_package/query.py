@@ -6,7 +6,7 @@ class RAGQuery:
         self.index = faiss.read_index(index_path)
         self.conn = sqlite3.connect(metadata_path)
 
-    def search(self, image_id, k=5):
+    def search_by_image_id(self, image_id, k=5):
         query_vector_id = (self.conn.execute("SELECT vector_id FROM metadata WHERE image_id=?", (image_id,)).fetchone())
         if query_vector_id is None:
             raise ValueError(f"Image ID {image_id} not found in metadata!")
@@ -26,3 +26,28 @@ class RAGQuery:
             image_ids.append(self.conn.execute("SELECT image_id FROM metadata WHERE vector_id=?", (str(idx),)).fetchone()[0])
 
         return distances, indices, image_ids
+    
+    def search_by_vector(self, query_vector, k=5):
+        """
+        Search for similar images using a vector directly.
+        
+        Args:
+            query_vector: numpy array of shape (d,) or (1, d) where d is the vector dimension
+            k: number of nearest neighbors to return
+            
+        Returns:
+            tuple: (distances, indices, image_ids)
+        """
+        if len(query_vector.shape) == 1:
+            query_vector = query_vector.reshape(1, -1)
+            
+        # Get k nearest neighbors
+        distances, indices = self.index.search(query_vector, k)
+        
+        image_ids = []
+        for idx in indices[0]:
+            image_ids.append(self.conn.execute("SELECT image_id FROM metadata WHERE vector_id=?", (str(idx),)).fetchone()[0])
+            
+        return distances, indices, image_ids
+    
+

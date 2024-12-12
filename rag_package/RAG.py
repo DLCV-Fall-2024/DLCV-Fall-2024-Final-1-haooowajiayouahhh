@@ -35,11 +35,15 @@ class RAG:
             presence_vector = np.expand_dims(presence_vector, axis=0)
             self.database.add_obj_pre_vec(idx, image_id, presence_vector)
 
-    def vit_emb_query_image(self, image_id, k=5):
+    def vit_emb_query_image_by_image_id(self, image_id, k=5):
         #returns distances, indices of vectors, image_ids on huggingface
-        return self.vit_emb_query.search(image_id, k)
+        return self.vit_emb_query.search_by_image_id(image_id, k)
     
-    def obj_pre_query_image(self, image_id, k=5):
-        return self.obj_pre_query.search(image_id, k)
+    def obj_pre_query_image_by_image_id(self, image_id, k=5):
+        return self.obj_pre_query.search_by_image_id(image_id, k)
         
+    def vit_emb_query_image_by_vector(self, vector, k=5):
+        return self.vit_emb_query.search_by_vector(vector, k)
 
+    def obj_pre_query_image_by_vector(self, vector, k=5):
+        return self.obj_pre_query.search_by_vector(vector, k)

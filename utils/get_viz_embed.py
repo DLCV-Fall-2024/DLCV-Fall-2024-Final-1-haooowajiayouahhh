@@ -52,6 +52,34 @@ def encode_images_with_vit(dataset, output_dir='./vit-images'):
                 save_path = os.path.join(output_dir, f'{idx}.npy')
                 np.save(save_path, embedding)
 
+def encode_single_image(image):
+    """
+    Encode a single image using ViT model.
+    
+    Args:
+        image_path (str): Path to the image file
+        
+    Returns:
+        numpy.ndarray: The embedding vector for the image
+    """
+    # Load and initialize the model and processor
+    processor = ViTImageProcessor.from_pretrained('google/vit-base-patch32-224-in21k')
+    model = ViTModel.from_pretrained('google/vit-base-patch32-224-in21k')
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    model = model.to(device)
+    model.eval()
+    
+    # Load and process the image
+    processed = processor(images=image, return_tensors="pt")
+    pixel_values = processed['pixel_values'].to(device)
+    
+    # Get embedding
+    with torch.no_grad():
+        outputs = model(pixel_values)
+        embedding = outputs.last_hidden_state[:, 0].cpu().numpy().squeeze()
+        
+    return embedding
+
 # Example usage:
 if __name__ == "__main__":
     
