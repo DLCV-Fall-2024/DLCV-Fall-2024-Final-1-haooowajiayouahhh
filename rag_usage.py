@@ -15,30 +15,6 @@ config={
 myRag = RAG(config)
 
 # define the inference data
-class Data:
-    def __init__(self, data):
-        self.image_id = data.id
-        self.image_path = data.path
-        self.task = "general" if "general" in self.image_path else "regional" if "regional" in self.image_path else "suggestion" if "suggestion" in self.image_path else "unknown"
-        self.image = Image.open(self.image_path).convert('RGB')
-        self.preprocess()
 
-    def preprocess(self):
-        self.json, self.annotation_image = preprocess_single_image(self.image, self.task) 
-
-    def get_vit_emb(self):
-        return encode_single_image(self.image)
-    
-    def get_obj_pre_vec(self):
-        return create_object_presence_vector(self)
-
-
-inference_image = {
-    "id": "",
-    "path": "/workspace/DLCV-Fall-2024-Final-1-haooowajiayouahhh/processed_outputs/train/general/123456.jpg"
-}
-
-data = Data(inference_image)
-
-print(myRag.vit_emb_query_image_by_vector(data.get_vit_emb(), k=5))
-print(myRag.obj_pre_query_image_by_vector(data.get_obj_pre_vec(), k=5))
+# print(myRag.vit_emb_query_image_by_vector(data.get_vit_emb(), k=5))
+# print(myRag.obj_pre_query_image_by_vector(data.get_obj_pre_vec(), k=5))

@@ -1,4 +1,4 @@
-from transformers import ViTImageProcessor, ViTModel
+from transformers import ViTImageProcessor, ViTModel, ViTFeatureExtractor
 import torch
 from PIL import Image
 import numpy as np 
@@ -8,49 +8,23 @@ import os
 from tqdm import tqdm
 import argparse
 
-class ImageDataset(Dataset):
-    def __init__(self, dataset):
-        self.dataset = dataset
-        self.processor = ViTImageProcessor.from_pretrained('google/vit-base-patch32-224-in21k')
-    
-    def __getitem__(self, idx):
-        # Load and process the image
-        image = self.dataset[idx]['image']
-        if isinstance(image, str):  # If image is a path
-            image = Image.open(image).convert('RGB')
-        # Process image and convert to tensor
-        processed = self.processor(images=image, return_tensors="pt")
-        return processed['pixel_values'].squeeze(0), self.dataset[idx]['id']
-    
-    def __len__(self):
-        return len(self.dataset)
 
-def encode_images_with_vit(dataset, output_dir='./vit-images'):
-    # Create output directory if it doesn't exist
-    os.makedirs(output_dir, exist_ok=True)
-    
-    processor = ViTImageProcessor.from_pretrained('google/vit-base-patch32-224-in21k')
-    model = ViTModel.from_pretrained('google/vit-base-patch32-224-in21k')
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    model = model.to(device)
-    print(device)
-    model.eval()
-    print("model loaded")
-    
-    # Create dataset and dataloader
-    image_dataset = ImageDataset(dataset)
-    dataloader = DataLoader(image_dataset, batch_size=32, shuffle=False, num_workers=4)
-    
-    with torch.no_grad():
-        for batch_images, batch_ids in tqdm(dataloader, desc="Processing images"):
-            batch_images = batch_images.to(device)
-            outputs = model(batch_images)
-            embeddings = outputs.last_hidden_state[:, 0].cpu().numpy()
-            
-            # Save embeddings
-            for embedding, idx in zip(embeddings, batch_ids):
-                save_path = os.path.join(output_dir, f'{idx}.npy')
-                np.save(save_path, embedding)
+class ImageEmbedder:
+    def __init__(self, model_name="google/vit-base-patch16-224"):
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.model = ViTModel.from_pretrained(model_name).to(self.device)
+        self.feature_extractor = ViTFeatureExtractor.from_pretrained(model_name)
+        self.processor = ViTImageProcessor.from_pretrained(model_name)
+
+    def encode_images_with_vit(self, batch_images):
+
+        with torch.no_grad():
+            batch_images = batch_images.to(self.device)
+            outputs = self.model(batch_images)
+            embeddings = outputs.last_hidden_state[:, 0]
+
+        return embeddings
+
 
 def encode_single_image(image):
     """
