@@ -181,7 +181,7 @@ def clean_label(label):
             matches.append(valid)
             
     if matches:
-        return matches[-1]  # Return the last match
+        return matches[-1]  # Return the last match, better algorithm????
         
     # Second try: find valid labels that contain the invalid label as a substring
     label_parts = label.lower().split()
