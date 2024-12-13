@@ -2,7 +2,7 @@ import torch
 from tqdm import tqdm
 import json
 from datasets import load_dataset
-from dlcv_datasets import ImageDataset
+from dlcv_datasets import ImageDataset, ConversationDataset
 from torch.utils.data import DataLoader
 from rag_package import RAG
 from PIL import Image
@@ -15,10 +15,11 @@ def rag_usage():
     config={
     "dataset_name": "ntudlcv/dlcv_2024_final1", #huggingface dataset name
     "model_name": "google/vit-base-patch32-224-in21k", #ViT name
-    "FAISS_PATH": "/workspace/DLCV-Fall-2024-Final-1-haooowajiayouahhh/vector_database", #needs full path, arbirary_name.faiss will do
-    "METADATA_PATH": "/workspace/DLCV-Fall-2024-Final-1-haooowajiayouahhh/vector_database/metadata.db", #arbitrary db name is suffice,
-    "JSON_PATH": "/workspace/DLCV-Fall-2024-Final-1-haooowajiayouahhh/processed_outputs/train_metadata.json",
-    "testing": True #set to True to test on small subset
+    "FAISS_PATH": "/workspace/DLCV-Fall-2024-Final-1-haooowajiayouahhh/vector_database", #the dir that faiss saved (there's two faiss, vit_emb.faiss, obj_pre_vec.faiss)
+    "METADATA_PATH": "/workspace/DLCV-Fall-2024-Final-1-haooowajiayouahhh/vector_database/metadata.db", #database's path
+    "JSON_PATH": "/workspace/DLCV-Fall-2024-Final-1-haooowajiayouahhh/processed_outputs/train_metadata.json", #json generated from preprocess
+    "test": True, #set to True to test on small subset of training dataset (28.8k or 200)
+    "init": True # init a new database, or just load a old one
     }
 
     myRag = RAG(config)
@@ -54,6 +55,30 @@ def rag_usage():
     return results_dict
 
 rag_usage()
+
+class PromptProcessor:
+    def __init__(self, convdata, rag_results):
+        self.convdata = convdata
+        self.rag_results = rag_results
+    
+    def get_prompts(self, image_id, question_message):
+        prompt_task_description = question_message
+        prompt_study_examples = "These examples are provided solely to help you understand. Here are the examples"
+        prompt_examples = ""
+        prompt_generate = "According to the image provided and the examples given, generate the response"
+        example_image_ids = self.rag_results[image_id]
+        for idx in example_image_ids:
+            conv = self.convdata[idx]
+            prompt_examples += f", {conv[1]["values"]}"
+        prompt_examples += "."
+        final_prompt = prompt_task_description + prompt_study_examples + prompt_examples + prompt_generate
+
+        return final_prompt
+        
+
+
+
+
 
  
         

@@ -6,6 +6,7 @@ accelerate==0.26.0
 opencv-python
 torch
 Pillow
+datasets
 
 #RAG
 faiss-cpu

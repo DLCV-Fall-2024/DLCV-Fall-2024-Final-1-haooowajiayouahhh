@@ -4,9 +4,9 @@ from torch.utils.data import Dataset
 import numpy as np
 
 class ImageDataset(Dataset):
-    def __init__(self, dataset):
+    def __init__(self, dataset, model_name):
         self.dataset = dataset
-        self.processor = ViTImageProcessor.from_pretrained('google/vit-base-patch32-224-in21k')
+        self.processor = ViTImageProcessor.from_pretrained(model_name)
     
     def __getitem__(self, idx):
         # Load and process the image
@@ -20,15 +20,4 @@ class ImageDataset(Dataset):
     def __len__(self):
         return len(self.dataset)
 
-
-class ConversationDataset(Dataset):
-    def __init__(self, dataset):
-        self.dataset = dataset
-        self.id2conv = {item['id']: item['conversations'] for item in dataset}  
-
-    def __getitem__(self, idx):
-
-        return dataset[idx]
-    
-    def __len__(self):
-        return len(self.dataset)    
+  

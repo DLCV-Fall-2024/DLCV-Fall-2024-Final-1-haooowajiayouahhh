@@ -95,7 +95,7 @@ def batch_iterator(iterable, batch_size):
     while batch := list(islice(iterator, batch_size)):
         yield batch
 
-def process_batch(batch: List[Dict], processor, model, device="cuda"):
+def process_batch(batch: List[Dict], processor, model, rag_prompt_processor, device="cuda"):
     """Process a batch of images and prompts"""
     images = []
     prompts = []
@@ -118,8 +118,10 @@ def process_batch(batch: List[Dict], processor, model, device="cuda"):
             for message in conversation:
                 role = "USER: " if message["from"] in ["human", "system"] else "ASSISTANT: "
                 prompt_str += f"{role}{message['value']} "
-            
-            full_prompt = prompt_str.strip() + " ASSISTANT: "
+            question_message = prompt_str.strip()
+
+            full_prompt = rag_prompt_processor.get_prompts(image_id, question_message) + " ASSISTANT: "
+
             
             images.append(image)
             prompts.append(full_prompt)
@@ -157,6 +159,8 @@ def main():
     parser.add_argument('--checkpoint_dir', type=str, default='./checkpoints/llava-v1.5-13b-task-lora', help='Path to checkpoint directory')
     parser.add_argument('--batch_size', type=int, default=4, help='Batch size for inference')
     parser.add_argument('--device', type=str, default='cuda', help='Device to use for inference')
+    parser.add_argument('--rag_results', type=str, required=True, help = 'the json file of rag_result')
+    parser.add_argument('--convdata', type=str, default='', help = 'the json file about conversation and image_id of training datset')
     args = parser.parse_args()
 
     # Model and processor setup
@@ -164,6 +168,13 @@ def main():
     processor = transformers.AutoProcessor.from_pretrained(base_model_id)
     model = load_model_with_weights(base_model_id, args.checkpoint_dir)
     model.to(args.device)
+
+    #RAG and promptprocessor setup
+    with open(args.rag_results, 'r') as file:
+        rag_results = json.load(file)
+    with open(args.convdata, 'r') as file:
+        convdata = json.load(file)
+    prompt_processor = PromptProcessor(convdata, rag_results)
     
     # Load the dataset
     print("Loading dataset...")
