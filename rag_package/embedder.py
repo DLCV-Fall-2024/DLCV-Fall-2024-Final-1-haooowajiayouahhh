@@ -1,7 +1,6 @@
 from transformers import ViTModel, ViTFeatureExtractor
 import os
 import torch
-from transformers import ViTImageProcessor, ViTModel
 import numpy as np 
 from torch.utils.data import DataLoader
 import os
@@ -11,14 +10,12 @@ from datasets import load_dataset
 from dlcv_datasets import create_small_subset
 
 class ImageEmbedder:
-    def __init__(self, dataset_name="ntudlcv/dlcv_2024_final1", model_name="google/vit-base-patch16-224", test_mode=False):
+    def __init__(self, dataset_name="ntudlcv/dlcv_2024_final1", test_mode=False, model_type='default'):
         if test_mode:
             dataset = create_small_subset(dataset_name=dataset_name, split="train", num_samples=200)
         else:
             dataset = load_dataset(dataset_name, split="train")
-        self.model = ViTModel.from_pretrained(model_name)
-        self.dataset = ImageDataset(dataset)
-        self.feature_extractor = ViTFeatureExtractor.from_pretrained(model_name)
+        self.dataset = ImageDataset(dataset, model_type=model_type)
 
     def encode_images_with_vit(self, output_dir='./vit-images'):
         # Create output directory if it doesn't exist
@@ -49,13 +46,36 @@ class ImageEmbedder:
                 all_embeddings.extend(embeddings)
                 all_ids.extend(batch_ids)
                 
-                # # Save embeddings
-                # for embedding, idx in zip(embeddings, batch_ids):
-                #     save_path = os.path.join(output_dir, f'{idx}.npy')
-
-                #     np.save(save_path, embedding)
-        # print(f"all_embeddings_shape: {np.array(all_embeddings).shape}")
-        # print(f"all_ids_shape: {np.array(all_ids).shape}")
         return all_embeddings, all_ids
+    
+    def encode_images_with_dino(self, output_dir='./dino-images'):
+        # Create output directory if it doesn't exist
+        os.makedirs(output_dir, exist_ok=True)
+        
+        from transformers import AutoModel
+        model = AutoModel.from_pretrained('facebook/dinov2-base')
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        model = model.to(device)
+        print(device)
+        model.eval()
+        print("Dinov2 model loaded")
+        
+        # Create dataset and dataloader
+        image_dataset = self.dataset
+        dataloader = DataLoader(image_dataset, batch_size=32, shuffle=False, num_workers=4)
+        
 
+        all_embeddings = []
+        all_ids = []
 
+        with torch.no_grad():
+            for batch_images, batch_ids in tqdm(dataloader, desc="Processing images"):
+                # print(f"batch_ids: {batch_ids}")
+                batch_images = batch_images.to(device)
+                # batch_images = processor(batch_images, return_tensors="pt")
+                outputs = model(batch_images)
+                embeddings = outputs.last_hidden_state[:, 0].cpu().numpy()
+                all_embeddings.extend(embeddings)
+                all_ids.extend(batch_ids)
+        return all_embeddings, all_ids
+    

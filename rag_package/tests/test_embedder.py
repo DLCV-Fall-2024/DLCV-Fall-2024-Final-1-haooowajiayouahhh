@@ -3,7 +3,7 @@ from rag_package.embedder import ImageEmbedder
 def test_embedder():
     # Replace with your actual dataset name
     embedder = ImageEmbedder(test_mode = True)
-    embeddings, ids = embedder.encode_images_with_vit()
+    embeddings, ids = embedder.encode_images_with_dino()
     
     # Print some debug info
     print(f"Number of embeddings: {len(embeddings)}")

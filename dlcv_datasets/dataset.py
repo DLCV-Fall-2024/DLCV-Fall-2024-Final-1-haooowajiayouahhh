@@ -1,13 +1,17 @@
-from transformers import ViTImageProcessor
+from transformers import ViTImageProcessor,AutoImageProcessor
 from PIL import Image
 from torch.utils.data import Dataset
 import numpy as np
 
 class ImageDataset(Dataset):
-    def __init__(self, dataset):
+    def __init__(self, dataset, model_type='default'):
         self.dataset = dataset
-        self.processor = ViTImageProcessor.from_pretrained('google/vit-base-patch32-224-in21k')
-    
+        if model_type=='default':
+            self.processor = ViTImageProcessor.from_pretrained('google/vit-base-patch32-224-in21k')
+        elif model_type=='dino':
+            self.processor = AutoImageProcessor.from_pretrained('facebook/dinov2-base')
+            print("[ImageDataset] loaded processor for dino... ")
+
     def __getitem__(self, idx):
         # Load and process the image
         image = self.dataset[idx]['image']
@@ -20,15 +24,4 @@ class ImageDataset(Dataset):
     def __len__(self):
         return len(self.dataset)
 
-
-class ConversationDataset(Dataset):
-    def __init__(self, dataset):
-        self.dataset = dataset
-        self.id2conv = {item['id']: item['conversations'] for item in dataset}  
-
-    def __getitem__(self, idx):
-
-        return dataset[idx]
-    
-    def __len__(self):
-        return len(self.dataset)    
+  

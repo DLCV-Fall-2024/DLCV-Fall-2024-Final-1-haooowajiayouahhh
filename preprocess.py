@@ -386,8 +386,8 @@ def main():
         # Process image and get results
         objects = process_image(image, depth_pipe, obj_model, obj_processor, device) # after DINO and depth anything
         # save coda'd images
-        annotated_image = draw_boxes(image.copy(), objects)
-        annotated_image.save(os.path.join(output_dir, f"{image_id}_detected.jpg"))
+        # annotated_image = draw_boxes(image.copy(), objects)
+        # annotated_image.save(os.path.join(output_dir, f"{image_id}_detected.jpg"))
         
         formatted_objects = format_objects(task, objects, image, image_id)
         # print(f"\nImage {image_id}:", end=" ")
