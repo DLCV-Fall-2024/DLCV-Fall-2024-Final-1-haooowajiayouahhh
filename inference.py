@@ -30,6 +30,8 @@ from tqdm import tqdm
 from itertools import islice
 from typing import List, Dict
 
+from rag_usage import PromptProcessor
+
 def load_model_with_weights(base_model_id, checkpoint_dir):
     # Load the base model
     config = transformers.AutoConfig.from_pretrained(base_model_id, trust_remote_code=True)
@@ -159,8 +161,8 @@ def main():
     parser.add_argument('--checkpoint_dir', type=str, default='./checkpoints/llava-v1.5-13b-task-lora', help='Path to checkpoint directory')
     parser.add_argument('--batch_size', type=int, default=4, help='Batch size for inference')
     parser.add_argument('--device', type=str, default='cuda', help='Device to use for inference')
-    parser.add_argument('--rag_results', type=str, required=True, help = 'the json file of rag_result')
-    parser.add_argument('--convdata', type=str, default='', help = 'the json file about conversation and image_id of training datset')
+    parser.add_argument('--rag_results', type=str, defaault='./storage/rag_test.json', help = 'the json file of rag_result')
+    parser.add_argument('--convdata', type=str, default='./storage/conversations.json', help = 'the json file about conversation and image_id of training datset')
     args = parser.parse_args()
 
     # Model and processor setup

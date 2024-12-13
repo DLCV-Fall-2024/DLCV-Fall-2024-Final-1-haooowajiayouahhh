@@ -5,7 +5,7 @@ import numpy as np
 import os
 
 class FAISSDatabase:
-    def __init__(self, index_path, metadata_path="metadata.db"):
+    def __init__(self, index_path, metadata_path="metadata.db", task="general"):
         self.vit_emb = faiss.IndexFlatL2(768)
         self.obj_pre_vec = faiss.IndexFlatL2(34)
         self.vit_emb_index_path = os.path.join(index_path, "vit_emb.faiss")
@@ -35,11 +35,12 @@ class FAISSDatabase:
 
 
 class JSONDataProcessor:
-    def __init__(self, json_path):
+    def __init__(self, json_path, task):
         self.json_path = json_path
         self.presence_vector_list = []
         with open(self.json_path, 'r') as f:
-            self.data = json.load(f)
+            all_data = json.load(f)
+            self.data = {k: v for k, v in all_data.items() if task in k}  # Filter data by task
 
     
     def get_object_presence_vector(self):

@@ -5,22 +5,28 @@ import rag_package.config as cfg
 
 
 class RAG:
-    def __init__(self, config):
+    def __init__(self, config, task):
         self.config = config
+        self.task = task
         self.dataset_name = self.config["dataset_name"]
         self.model_name = self.config["model_name"]
-        self.vit_embedder = ImageEmbedder(self.dataset_name, self.model_name, test_mode = self.config["test"]) 
-        self.json_data = JSONDataProcessor(self.config["JSON_PATH"])
-        self.database = FAISSDatabase(self.config["FAISS_PATH"], self.config["METADATA_PATH"])
+        os.makedirs(self.config["FAISS_PATH"], exist_ok=True)
+        os.makedirs(os.path.join(self.config["FAISS_PATH"], self.task), exist_ok=True)
+        self.task_faiss_path = os.path.join(self.config["FAISS_PATH"], self.task) 
+        self.metadata_path = os.path.join(self.config["FAISS_PATH"], self.task, "metadata.db") 
+        self.vit_embedder = ImageEmbedder(self.dataset_name, self.model_name, self.config["test"], self.task) 
+        self.json_data = JSONDataProcessor(self.config["JSON_PATH"], self.task)
+        self.database = FAISSDatabase(self.task_faiss_path, self.metadata_path, self.task)
         if self.config["init"]:
             self.set_vit_embedding()
-            self.set_obj_presence_vector()
-            print(f"Metadata saved to {self.config['METADATA_PATH']}!")
+            if self.task != 'regional':
+                self.set_obj_presence_vector()
+            print(f"Metadata saved to {self.task_faiss_path}!")
             self.database.save()
-            print(f"Encoding vectors saved to {config['FAISS_PATH']}!")
+            print(f"Encoding vectors saved to {self.task_faiss_path}!")
 
-        self.vit_emb_query = RAGQuery(os.path.join(config["FAISS_PATH"], "vit_emb.faiss"), config["METADATA_PATH"])
-        self.obj_pre_query = RAGQuery(os.path.join(config["FAISS_PATH"], "obj_pre_vec.faiss"), config["METADATA_PATH"])
+        self.vit_emb_query = RAGQuery(os.path.join(self.task_faiss_path, "vit_emb.faiss"), self.metadata_path)
+        self.obj_pre_query = RAGQuery(os.path.join(self.task_faiss_path, "obj_pre_vec.faiss"), self.metadata_path)
 
 
     def set_vit_embedding(self):
@@ -43,6 +49,8 @@ class RAG:
         return self.obj_pre_query.search_by_image_id(image_id, k)
         
     def vit_emb_query_image_by_vector(self, vector, k=5):
+        if self.task == 'regional':
+            return
         return self.vit_emb_query.search_by_vector(vector, k)
 
     def obj_pre_query_image_by_vector(self, vector, k=5):
