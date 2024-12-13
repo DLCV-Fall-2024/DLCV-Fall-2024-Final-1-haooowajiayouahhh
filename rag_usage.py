@@ -15,10 +15,8 @@ def rag_usage():
     # Set RAG 
     config={
     "dataset_name": "ntudlcv/dlcv_2024_final1", #huggingface dataset name
-    "model_name": "google/vit-base-patch32-224-in21k",
     "embedding_model_type": "dino", #ViT name
     "FAISS_PATH": "/workspace/DLCV-Fall-2024-Final-1-haooowajiayouahhh/vector_database", #needs full path, arbirary_name.faiss will do
-    "METADATA_PATH": "/workspace/DLCV-Fall-2024-Final-1-haooowajiayouahhh/vector_database/metadata.db", #arbitrary db name is suffice,
     "JSON_PATH": "/workspace/DLCV-Fall-2024-Final-1-haooowajiayouahhh/processed_outputs/train_metadata.json",
     "test": True, #set to True to test on small subset of training dataset (28.8k or 200)
     "init": True # init a new database, or just load a old one
@@ -31,7 +29,6 @@ def rag_usage():
 
     # Load test dataset    
     dataset = load_dataset(config["dataset_name"], split="test")
-    # dataset = dataset.take(10)
     print("Processing images...")
     results_dict = {}
     
@@ -77,13 +74,13 @@ class PromptProcessor:
         self.convdata = convdata
         self.rag_results = rag_results
     
-    def get_prompts(self, image_id, question_message):
+    def get_prompts(self, image_id, question_message, baseOn):
         prompt_task_description = question_message
         prompt_study_examples = "These examples are provided solely to help you understand. Here are the examples"
         prompt_examples = ""
         prompt_generate = "According to the image provided and the examples given, generate the response"
         example_image_ids = self.rag_results[image_id]
-        for idx in example_image_ids:
+        for idx in example_image_ids[baseOn]:
             conv = self.convdata[idx]
             prompt_examples += f", {conv}"
         prompt_examples += "."

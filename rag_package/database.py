@@ -5,9 +5,10 @@ import numpy as np
 import os
 
 class FAISSDatabase:
-    def __init__(self, index_path, metadata_path="metadata.db", task="general"):
+    def __init__(self, index_path, task, metadata_path="metadata.db"):
         self.vit_emb = faiss.IndexFlatL2(768)
         self.obj_pre_vec = faiss.IndexFlatL2(34)
+        self.metadata_path = metadata_path
         self.vit_emb_index_path = os.path.join(index_path, "vit_emb.faiss")
         self.obj_pre_vec_index_path = os.path.join(index_path, "obj_pre_vec.faiss")
         self.conn = sqlite3.connect(metadata_path)
@@ -38,6 +39,7 @@ class JSONDataProcessor:
     def __init__(self, json_path, task):
         self.json_path = json_path
         self.presence_vector_list = []
+        self.task = task
         with open(self.json_path, 'r') as f:
             all_data = json.load(f)
             self.data = {k: v for k, v in all_data.items() if task in k}  # Filter data by task
@@ -64,6 +66,7 @@ class JSONDataProcessor:
             'traffic island', 'traffic box', 'debris', 'machinery', 'dustbin', 'cart', 'chair', 'basket', 'suitcase', 'dog', 'phone booth'
         ]
         for image_id in self.data.keys():
+            assert self.task in image_id
             if "regional" not in image_id:
                 presence_vector = [0] * len(categories)
                 for category_group in self.data[image_id].values():

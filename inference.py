@@ -122,7 +122,7 @@ def process_batch(batch: List[Dict], processor, model, rag_prompt_processor, dev
                 prompt_str += f"{role}{message['value']} "
             question_message = prompt_str.strip()
 
-            full_prompt = rag_prompt_processor.get_prompts(image_id, question_message) + " ASSISTANT: "
+            full_prompt = rag_prompt_processor.get_prompts(image_id, question_message, 'vit_similar_images') + " ASSISTANT: "
 
             
             images.append(image)
@@ -159,9 +159,9 @@ def main():
     parser = argparse.ArgumentParser(description="LLaVA Batch Inference on HF Dataset")
     parser.add_argument('--output_path', type=str, default='submission.json', help='Output file for predictions')
     parser.add_argument('--checkpoint_dir', type=str, default='./checkpoints/llava-v1.5-13b-task-lora', help='Path to checkpoint directory')
-    parser.add_argument('--batch_size', type=int, default=4, help='Batch size for inference')
+    parser.add_argument('--batch_size', type=int, default=1, help='Batch size for inference')
     parser.add_argument('--device', type=str, default='cuda', help='Device to use for inference')
-    parser.add_argument('--rag_results', type=str, defaault='./storage/rag_test.json', help = 'the json file of rag_result')
+    parser.add_argument('--rag_results', type=str, default='./storage/rag_test.json', help = 'the json file of rag_result')
     parser.add_argument('--convdata', type=str, default='./storage/conversations.json', help = 'the json file about conversation and image_id of training datset')
     args = parser.parse_args()
 
@@ -180,7 +180,7 @@ def main():
     
     # Load the dataset
     print("Loading dataset...")
-    dataset = load_dataset("ntudlcv/dlcv_2024_final1", split="test", streaming=True)
+    dataset = load_dataset("ntudlcv/dlcv_2024_final1", split="test")
     
     predictions = {}
     total_items = 900  # number of test datasets
@@ -190,7 +190,7 @@ def main():
     
     with tqdm(total=total_items, desc="Processing batches") as pbar:
         for batch in batch_iterator(dataset, args.batch_size):
-            batch_predictions = process_batch(batch, processor, model, args.device)
+            batch_predictions = process_batch(batch, processor, model, prompt_processor, args.device)
             predictions.update(batch_predictions)
             pbar.update(len(batch))
             

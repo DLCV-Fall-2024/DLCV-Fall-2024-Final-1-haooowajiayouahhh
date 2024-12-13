@@ -16,7 +16,7 @@ class RAG:
         self.metadata_path = os.path.join(self.config["FAISS_PATH"], self.task, "metadata.db") 
         self.vit_embedder = ImageEmbedder(self.dataset_name, self.config["test"], config['embedding_model_type'], self.task) 
         self.json_data = JSONDataProcessor(self.config["JSON_PATH"], self.task)
-        self.database = FAISSDatabase(self.task_faiss_path, self.metadata_path, self.task)
+        self.database = FAISSDatabase(self.task_faiss_path , self.task, self.metadata_path)
         if self.config["init"]:
             self.set_vit_embedding(model_type=config['embedding_model_type'])
             if self.task != 'regional':
@@ -37,12 +37,14 @@ class RAG:
             all_embeddings,all_ids=self.vit_embedder.encode_images_with_dino()
         for idx, (embedding, image_id) in enumerate(zip(all_embeddings, all_ids)):
             embedding = np.expand_dims(embedding, axis=0)
+            assert self.task in image_id
             self.database.add_vit_emb_vector(idx, image_id, embedding)
 
     def set_obj_presence_vector(self):
         self.json_data.get_object_presence_vector()
         for idx, (presence_vector, image_id) in enumerate(self.json_data.presence_vector_list):
             presence_vector = np.expand_dims(presence_vector, axis=0)
+            assert self.task in image_id
             self.database.add_obj_pre_vec(idx, image_id, presence_vector)
 
     def vit_emb_query_image_by_image_id(self, image_id, k=5):

@@ -10,17 +10,19 @@ from datasets import load_dataset
 from dlcv_datasets import create_small_subset
 
 class ImageEmbedder:
-    def __init__(self, dataset_name="ntudlcv/dlcv_2024_final1", test_mode=False, model_type='default', task='general'):
+    def __init__(self, dataset_name="ntudlcv/dlcv_2024_final1", test_mode=False, task='general', model_type='default'):
         if test_mode:
             dataset = create_small_subset(dataset_name=dataset_name, split="train", num_samples=200)
         else:
+            dataset = load_dataset(dataset_name, split="train")
             if task == 'general':
-                dataset = load_dataset(dataset_name, split="train[:4884]")
+                dataset=dataset.filter(lambda example: example["id"].startswith("Train_general"))
+                # dataset = load_dataset(dataset_name, split="train[:4884]")
             if task == 'regional':
-                dataset = load_dataset(dataset_name, split="train[4884:21926]")
+                # dataset = load_dataset(dataset_name, split="train[4884:21926]")
+                dataset=dataset.filter(lambda example: example["id"].startswith("Train_regional"))
             if task ==  'suggestion':
-                dataset = load_dataset(dataset_name, split="train[21926:]")
-
+               dataset=dataset.filter(lambda example: example["id"].startswith("Train_suggestion"))
         self.dataset = ImageDataset(dataset, model_type=model_type)
         self.task = task
 
