@@ -14,11 +14,11 @@ class RAG:
         os.makedirs(os.path.join(self.config["FAISS_PATH"], self.task), exist_ok=True)
         self.task_faiss_path = os.path.join(self.config["FAISS_PATH"], self.task) 
         self.metadata_path = os.path.join(self.config["FAISS_PATH"], self.task, "metadata.db") 
-        self.vit_embedder = ImageEmbedder(self.dataset_name, self.model_name, self.config["test"], self.task) 
+        self.vit_embedder = ImageEmbedder(self.dataset_name, self.model_name, self.config["test"], config['embedding_model_type'], self.task) 
         self.json_data = JSONDataProcessor(self.config["JSON_PATH"], self.task)
         self.database = FAISSDatabase(self.task_faiss_path, self.metadata_path, self.task)
         if self.config["init"]:
-            self.set_vit_embedding()
+            self.set_vit_embedding(model_type=config['embedding_model_type'])
             if self.task != 'regional':
                 self.set_obj_presence_vector()
             print(f"Metadata saved to {self.task_faiss_path}!")
@@ -29,8 +29,12 @@ class RAG:
         self.obj_pre_query = RAGQuery(os.path.join(self.task_faiss_path, "obj_pre_vec.faiss"), self.metadata_path)
 
 
-    def set_vit_embedding(self):
-        all_embeddings, all_ids = self.vit_embedder.encode_images_with_vit()
+    def set_vit_embedding(self, model_type='default'):
+        if model_type=='default':
+            all_embeddings, all_ids = self.vit_embedder.encode_images_with_vit()
+        elif model_type=='dino':
+            print("Vision Embedding Using Dino....")
+            all_embeddings,all_ids=self.vit_embedder.encode_images_with_dino()
         for idx, (embedding, image_id) in enumerate(zip(all_embeddings, all_ids)):
             embedding = np.expand_dims(embedding, axis=0)
             self.database.add_vit_emb_vector(idx, image_id, embedding)

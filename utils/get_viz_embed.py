@@ -9,24 +9,8 @@ from tqdm import tqdm
 import argparse
 
 
-class ImageEmbedder:
-    def __init__(self, model_name="google/vit-base-patch16-224"):
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        self.model = ViTModel.from_pretrained(model_name).to(self.device)
-        self.feature_extractor = ViTFeatureExtractor.from_pretrained(model_name)
-        self.processor = ViTImageProcessor.from_pretrained(model_name)
 
-    def encode_images_with_vit(self, batch_images):
-
-        with torch.no_grad():
-            batch_images = batch_images.to(self.device)
-            outputs = self.model(batch_images)
-            embeddings = outputs.last_hidden_state[:, 0]
-
-        return embeddings
-
-
-def encode_single_image(image):
+def encode_single_image(image,model_type='default'):
     """
     Encode a single image using ViT model.
     
@@ -37,21 +21,35 @@ def encode_single_image(image):
         numpy.ndarray: The embedding vector for the image
     """
     # Load and initialize the model and processor
-    processor = ViTImageProcessor.from_pretrained('google/vit-base-patch32-224-in21k')
-    model = ViTModel.from_pretrained('google/vit-base-patch32-224-in21k')
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    model = model.to(device)
-    model.eval()
-    
-    # Load and process the image
-    processed = processor(images=image, return_tensors="pt")
-    pixel_values = processed['pixel_values'].to(device)
-    
-    # Get embedding
-    with torch.no_grad():
-        outputs = model(pixel_values)
-        embedding = outputs.last_hidden_state[:, 0].cpu().numpy().squeeze()
+    if model_type=='default':
+        print("encoding single image using default ViT...")
+        processor = ViTImageProcessor.from_pretrained('google/vit-base-patch32-224-in21k')
+        model = ViTModel.from_pretrained('google/vit-base-patch32-224-in21k')
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        model = model.to(device)
+        model.eval()
         
+        # Load and process the image
+        processed = processor(images=image, return_tensors="pt")
+        pixel_values = processed['pixel_values'].to(device)
+        
+        # Get embedding
+        with torch.no_grad():
+            outputs = model(pixel_values)
+            embedding = outputs.last_hidden_state[:, 0].cpu().numpy().squeeze()
+    elif model_type=='dino':
+        from transformers import AutoModel, AutoImageProcessor
+        model = AutoModel.from_pretrained('facebook/dinov2-base')
+        processor= AutoImageProcessor.from_pretrained('facebook/dinov2-base')
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        model = model.to(device)
+        model.eval()
+        processed = processor(images=image, return_tensors="pt")
+        pixel_values = processed['pixel_values'].to(device)
+        with torch.no_grad():
+            outputs = model(pixel_values)
+            embedding = outputs.last_hidden_state[:, 0].cpu().numpy().squeeze()
+
     return embedding
 
 # Example usage:

@@ -3,22 +3,25 @@ from tqdm import tqdm
 import json
 from datasets import load_dataset
 from dlcv_datasets import ImageDataset
+# from dlcv_datasets import ImageDataset, ConversationDataset
 from torch.utils.data import DataLoader
 from rag_package import RAG
 from PIL import Image
 from utils import encode_single_image, create_single_object_presence_vector, preprocess_single_image
-
+import os
 
 
 def rag_usage():
     # Set RAG 
     config={
     "dataset_name": "ntudlcv/dlcv_2024_final1", #huggingface dataset name
-    "model_name": "google/vit-base-patch32-224-in21k", #ViT name
-    "FAISS_PATH": "/workspace/DLCV-Fall-2024-Final-1-haooowajiayouahhh/vector_database", #the dir that faiss saved (there's two faiss, vit_emb.faiss, obj_pre_vec.faiss)
-    "JSON_PATH": "/workspace/DLCV-Fall-2024-Final-1-haooowajiayouahhh/processed_outputs/train_metadata.json", #json generated from preprocess
-    "test": False, #set to True to test on small subset of training dataset (28.8k or 200)
-    "init": False # init a new database, or just load a old one
+    "model_name": "google/vit-base-patch32-224-in21k",
+    "embedding_model_type": "dino", #ViT name
+    "FAISS_PATH": "/workspace/DLCV-Fall-2024-Final-1-haooowajiayouahhh/vector_database", #needs full path, arbirary_name.faiss will do
+    "METADATA_PATH": "/workspace/DLCV-Fall-2024-Final-1-haooowajiayouahhh/vector_database/metadata.db", #arbitrary db name is suffice,
+    "JSON_PATH": "/workspace/DLCV-Fall-2024-Final-1-haooowajiayouahhh/processed_outputs/train_metadata.json",
+    "test": True, #set to True to test on small subset of training dataset (28.8k or 200)
+    "init": True # init a new database, or just load a old one
     }
     myRag = {}
     myRag['general'] = RAG(config, 'general')
@@ -38,7 +41,7 @@ def rag_usage():
         image_id = item['id']
         image = item['image']
         task = image_id.split('_')[1]
-        embedding = encode_single_image(image)
+        embedding = encode_single_image(image,model_type=config['embedding_model_type'])
         formatted_object = preprocess_single_image(image, task)
         obj_image_ids = []
         vit_image_ids = []
@@ -68,6 +71,7 @@ def rag_usage():
     return results_dict
 
 
+
 class PromptProcessor:
     def __init__(self, convdata, rag_results):
         self.convdata = convdata
@@ -89,6 +93,8 @@ class PromptProcessor:
         
 if __name__ == "__main__":
     rag_usage()
+
+
 
 
 
