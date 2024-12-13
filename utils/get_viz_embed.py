@@ -38,13 +38,12 @@ def encode_single_image(image,model_type='default'):
             outputs = model(pixel_values)
             embedding = outputs.last_hidden_state[:, 0].cpu().numpy().squeeze()
     elif model_type=='dino':
-        print("encoding single image using Dinov2...")
+        from transformers import AutoModel, AutoImageProcessor
         model = AutoModel.from_pretrained('facebook/dinov2-base')
         processor= AutoImageProcessor.from_pretrained('facebook/dinov2-base')
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         model = model.to(device)
         model.eval()
-        print("Dinov2 model loaded")
         processed = processor(images=image, return_tensors="pt")
         pixel_values = processed['pixel_values'].to(device)
         with torch.no_grad():

@@ -8,7 +8,7 @@ from torch.utils.data import DataLoader
 from rag_package import RAG
 from PIL import Image
 from utils import encode_single_image, create_single_object_presence_vector, preprocess_single_image
-
+import os
 
 
 def rag_usage():
@@ -23,7 +23,7 @@ def rag_usage():
     "test": True, #set to True to test on small subset of training dataset (28.8k or 200)
     "init": True # init a new database, or just load a old one
     }
-
+    os.makedirs(config["FAISS_PATH"], exist_ok=True)
     myRag = RAG(config)
     print("rag set")
 
