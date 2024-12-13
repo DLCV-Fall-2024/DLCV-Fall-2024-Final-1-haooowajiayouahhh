@@ -14,7 +14,7 @@ class RAG:
         os.makedirs(os.path.join(self.config["FAISS_PATH"], self.task), exist_ok=True)
         self.task_faiss_path = os.path.join(self.config["FAISS_PATH"], self.task) 
         self.metadata_path = os.path.join(self.config["FAISS_PATH"], self.task, "metadata.db") 
-        self.vit_embedder = ImageEmbedder(self.dataset_name, self.model_name, self.config["test"], config['embedding_model_type'], self.task) 
+        self.vit_embedder = ImageEmbedder(self.dataset_name, self.config["test"], config['embedding_model_type'], self.task) 
         self.json_data = JSONDataProcessor(self.config["JSON_PATH"], self.task)
         self.database = FAISSDatabase(self.task_faiss_path, self.metadata_path, self.task)
         if self.config["init"]:
