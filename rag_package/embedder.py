@@ -17,9 +17,7 @@ class ImageEmbedder:
             dataset = load_dataset(dataset_name, split="train")
             if task == 'general':
                 dataset=dataset.filter(lambda example: example["id"].startswith("Train_general"))
-                # dataset = load_dataset(dataset_name, split="train[:4884]")
             if task == 'regional':
-                # dataset = load_dataset(dataset_name, split="train[4884:21926]")
                 dataset=dataset.filter(lambda example: example["id"].startswith("Train_regional"))
             if task ==  'suggestion':
                dataset=dataset.filter(lambda example: example["id"].startswith("Train_suggestion"))
@@ -49,8 +47,8 @@ class ImageEmbedder:
             for batch_images, batch_ids in tqdm(dataloader, desc="Processing images"):
                 # print(f"batch_ids: {batch_ids}")
                 batch_images = batch_images.to(device)
-                outputs = model(batch_images)
-                embeddings = outputs.last_hidden_state[:, 0].cpu().numpy()
+                outputs = model.get_image_features(pixel_values = batch_images)
+                embeddings = outputs.cpu().numpy()
                 all_embeddings.extend(embeddings)
                 all_ids.extend(batch_ids)
                 
