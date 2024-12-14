@@ -1,4 +1,4 @@
-from transformers import ViTModel, ViTFeatureExtractor
+from transformers import CLIPProcessor, CLIPModel
 import os
 import torch
 import numpy as np 
@@ -30,7 +30,7 @@ class ImageEmbedder:
         # Create output directory if it doesn't exist
         os.makedirs(output_dir, exist_ok=True)
         
-        model = ViTModel.from_pretrained('google/vit-base-patch32-224-in21k')
+        model = CLIPModel.from_pretrained("openai/clip-vit-large-patch14")
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         model = model.to(device)
         print(device)

@@ -1,4 +1,4 @@
-from transformers import ViTImageProcessor, ViTModel, ViTFeatureExtractor
+from transformers import CLIPProcessor, CLIPModel
 import torch
 from PIL import Image
 import numpy as np 
@@ -23,8 +23,8 @@ def encode_single_image(image,model_type='default'):
     # Load and initialize the model and processor
     if model_type=='default':
         print("encoding single image using default ViT...")
-        processor = ViTImageProcessor.from_pretrained('google/vit-base-patch32-224-in21k')
-        model = ViTModel.from_pretrained('google/vit-base-patch32-224-in21k')
+        processor = CLIPProcessor.from_pretrained("openai/clip-vit-large-patch14")
+        model = CLIPModel.from_pretrained("openai/clip-vit-large-patch14")
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         model = model.to(device)
         model.eval()
