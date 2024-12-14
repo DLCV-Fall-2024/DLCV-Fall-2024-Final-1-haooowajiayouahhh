@@ -15,7 +15,7 @@ def rag_usage():
     # Set RAG 
     config={
     "dataset_name": "ntudlcv/dlcv_2024_final1", #huggingface dataset name
-    "embedding_model_type": "dino", #ViT name
+    "embedding_model_type": "dino", #dino or default(vitpatch32)
     "FAISS_PATH": "/workspace/DLCV-Fall-2024-Final-1-haooowajiayouahhh/dino_vector_database", #needs full path, arbirary_name.faiss will do
     "JSON_PATH": "/workspace/DLCV-Fall-2024-Final-1-haooowajiayouahhh/processed_outputs/train_metadata.json",
     "test": False, #set to True to test on small subset of training dataset (28.8k or 200)
