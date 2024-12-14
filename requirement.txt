@@ -8,6 +8,9 @@ torch
 Pillow
 datasets
 
+#RAG
+faiss-cpu
+faiss-gpu
 
 #linting
 autoflake

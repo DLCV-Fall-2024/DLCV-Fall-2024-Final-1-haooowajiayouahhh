@@ -161,7 +161,7 @@ def main():
     parser.add_argument('--checkpoint_dir', type=str, default='./checkpoints/llava-v1.5-13b-task-lora', help='Path to checkpoint directory')
     parser.add_argument('--batch_size', type=int, default=1, help='Batch size for inference')
     parser.add_argument('--device', type=str, default='cuda', help='Device to use for inference')
-    parser.add_argument('--rag_results', type=str, default='./storage/rag_test.json', help = 'the json file of rag_result')
+    parser.add_argument('--rag_results', type=str, default='./storage/vitpatch32rag_test.json', help = 'the json file of rag_result')
     parser.add_argument('--convdata', type=str, default='./storage/conversations.json', help = 'the json file about conversation and image_id of training datset')
     args = parser.parse_args()
 

@@ -16,11 +16,14 @@ def rag_usage():
     config={
     "dataset_name": "ntudlcv/dlcv_2024_final1", #huggingface dataset name
     "embedding_model_type": "dino", #ViT name
-    "FAISS_PATH": "/workspace/DLCV-Fall-2024-Final-1-haooowajiayouahhh/vector_database", #needs full path, arbirary_name.faiss will do
+    "FAISS_PATH": "/workspace/DLCV-Fall-2024-Final-1-haooowajiayouahhh/dino_vector_database", #needs full path, arbirary_name.faiss will do
     "JSON_PATH": "/workspace/DLCV-Fall-2024-Final-1-haooowajiayouahhh/processed_outputs/train_metadata.json",
-    "test": True, #set to True to test on small subset of training dataset (28.8k or 200)
+    "test": False, #set to True to test on small subset of training dataset (28.8k or 200)
     "init": True # init a new database, or just load a old one
     }
+    if config["init"]:
+        if os.path.exists(config["FAISS_PATH"]):
+            os.system("rm -r " + config["FAISS_PATH"])
     myRag = {}
     myRag['general'] = RAG(config, 'general')
     myRag['regional'] = RAG(config, 'regional')
@@ -61,7 +64,7 @@ def rag_usage():
             'obj_similar_images': obj_image_ids
         }
 
-    output_path = "storage/rag_test.json"
+    output_path = f"storage/{config['embedding_model_type']}_rag_test.json"
     with open(output_path, "w") as f:
         json.dump(results_dict, f, indent=4)        
     

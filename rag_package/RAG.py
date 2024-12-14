@@ -9,12 +9,11 @@ class RAG:
         self.config = config
         self.task = task
         self.dataset_name = self.config["dataset_name"]
-        self.model_name = self.config["model_name"]
         os.makedirs(self.config["FAISS_PATH"], exist_ok=True)
         os.makedirs(os.path.join(self.config["FAISS_PATH"], self.task), exist_ok=True)
         self.task_faiss_path = os.path.join(self.config["FAISS_PATH"], self.task) 
         self.metadata_path = os.path.join(self.config["FAISS_PATH"], self.task, "metadata.db") 
-        self.vit_embedder = ImageEmbedder(self.dataset_name, self.config["test"], config['embedding_model_type'], self.task) 
+        self.vit_embedder = ImageEmbedder(self.dataset_name, self.config["test"], self.task, config['embedding_model_type']) 
         self.json_data = JSONDataProcessor(self.config["JSON_PATH"], self.task)
         self.database = FAISSDatabase(self.task_faiss_path , self.task, self.metadata_path)
         if self.config["init"]:
@@ -34,7 +33,7 @@ class RAG:
             all_embeddings, all_ids = self.vit_embedder.encode_images_with_vit()
         elif model_type=='dino':
             print("Vision Embedding Using Dino....")
-            all_embeddings,all_ids=self.vit_embedder.encode_images_with_dino()
+            all_embeddings, all_ids=self.vit_embedder.encode_images_with_dino()
         for idx, (embedding, image_id) in enumerate(zip(all_embeddings, all_ids)):
             embedding = np.expand_dims(embedding, axis=0)
             assert self.task in image_id
