@@ -40,3 +40,8 @@ python3 rag_usage.py
 python3 inference.py --output_path --checkpoint_dir --batch_size --device --rag_results --convdata
 ```
 
+# finetune model
+1. cd LLaVA
+2. ensure you have convdata train_metadata and rag_results (already pushed to github...)
+3. modify the --task in scripts/v1_5/finetune_lora_hf.sh (task: 'general', 'regional', 'suggestion')
+4. modify the --output_dir

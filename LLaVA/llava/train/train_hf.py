@@ -168,9 +168,9 @@ class HuggingfaceSupervisedDataset(Dataset):
             prompt_str+=system_text
             prompt_str+=input_text
             question_message = prompt_str.strip()
-            print(image_id)
+            # print(image_id)
             input_text= prompt_processor.get_prompts(image_id, question_message, 'vit_similar_images') + " ASSISTANT: "
-            print("[DEBUG@HuggingfaceSupervisedDataset] input_text:\n", input_text)
+            # print("[DEBUG@HuggingfaceSupervisedDataset] input_text:\n", input_text)
             # Process inputs
             inputs = self.processor(
                 images=image,
@@ -281,7 +281,7 @@ def make_supervised_data_module(processor: AutoProcessor,
         data_args=data_args,
         task=data_args.task
     )
-    print(len(train_dataset))
+    # print(len(train_dataset))
     data_collator = DataCollatorForLLaVA(
         processor=processor,
         max_length=data_args.model_max_length
@@ -401,9 +401,9 @@ def print_trainable_parameters(model):
             trainable_params.append(f"Module name: {name}, Shape: {param.shape}")
             trainable_param += num_params
     
-    print("Trainable modules:")
-    for param in trainable_params:
-        print(param)
+    # print("Trainable modules:")
+    # for param in trainable_params:
+    #     print(param)
     
     print(f"\nTotal Parameters: {all_param:,}")
     print(f"Trainable Parameters: {trainable_param:,}")
@@ -522,7 +522,7 @@ def train():
         processor=processor,
         data_args=data_args
     )
-    print(training_args)
+    # print(training_args)
 
     trainer = LLaVATrainer(
         model=model,
@@ -530,7 +530,7 @@ def train():
         **data_module
     )
 
-    print(f"########Start Training Task{data_args.task}########")
+    print(f"########Start Training Task: {data_args.task}########")
     # Train the model
     if list(pathlib.Path(training_args.output_dir).glob("checkpoint-*")):
         trainer.train(resume_from_checkpoint=True)
