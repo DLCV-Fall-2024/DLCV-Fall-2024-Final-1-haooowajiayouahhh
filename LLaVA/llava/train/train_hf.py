@@ -17,7 +17,7 @@ from llava.train.llava_trainer import LLaVATrainer
 
 from llava.model import *
 from PIL import Image
-
+from prompt_processor import PromptProcessor
 local_rank = None
 
 @dataclass
@@ -40,6 +40,12 @@ class ModelArguments:
 class DataArguments:
     data_path: str = field(default=None,
                           metadata={"help": "Path to the training data."})
+    convdata: str = field(default=None,
+                          metadata={"help": "Path to the conversation data."})
+    rag_results: str = field(default=None,
+                            metadata={"help": "Path to the RAG results."})
+    metadata_path: str = field(default=None,
+                              metadata={"help": "Path to the metadata."})
     is_multimodal: bool = False
     image_aspect_ratio: str = 'square'
     model_max_length: int = field(
@@ -114,7 +120,11 @@ class HuggingfaceSupervisedDataset(Dataset):
             image = sources[0]['image']
             if not isinstance(image, Image.Image):
                 image = Image.open(image).convert('RGB')
-                
+            #add extra infos for input text
+            image_id=sources[0]['id']
+            prompt_processor=PromptProcessor(self.data_args.convdata, self.data_args.rag_results, self.data_args.metadata_path)
+            input_text= prompt_processor.get_prompts(image_id, input_text, 'vit_similar_images')
+            print("[DEBUG@HuggingfaceSupervisedDataset] input_text:\n", input_text)
             # Process inputs
             inputs = self.processor(
                 images=image,
