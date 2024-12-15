@@ -8,15 +8,9 @@ torch
 Pillow
 datasets
 
-#RAG
-faiss-cpu
-faiss-gpu
-
 #linting
 autoflake
 isort
 flake8
 black
 pre-commit
-
-opencv-python
