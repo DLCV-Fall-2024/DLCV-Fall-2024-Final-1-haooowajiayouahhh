@@ -35,8 +35,8 @@ def encode_single_image(image,model_type='default'):
         
         # Get embedding
         with torch.no_grad():
-            outputs = model(pixel_values)
-            embedding = outputs.last_hidden_state[:, 0].cpu().numpy().squeeze()
+            outputs = model.get_image_features(pixel_values=pixel_values)
+            embedding = outputs.cpu().numpy().squeeze()
     elif model_type=='dino':
         from transformers import AutoModel, AutoImageProcessor
         model = AutoModel.from_pretrained('facebook/dinov2-base')
