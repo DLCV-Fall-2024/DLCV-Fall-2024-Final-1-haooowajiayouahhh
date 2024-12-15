@@ -24,7 +24,7 @@ from tqdm import tqdm
 from itertools import islice
 from typing import List, Dict
 
-from rag_usage import PromptProcessor
+from prompt_processor import PromptProcessor
 
 def load_model_with_weights(base_model_id, checkpoint_dir):
     # Load the base model
@@ -157,6 +157,7 @@ def main():
     parser.add_argument('--device', type=str, default='cuda', help='Device to use for inference')
     parser.add_argument('--rag_results', type=str, default='./storage/vitpatch32rag_test.json', help = 'the json file of rag_result')
     parser.add_argument('--convdata', type=str, default='./storage/conversations.json', help = 'the json file about conversation and image_id of training datset')
+    parser.add_argument('--metadata_path', type=str, default='./processed_outputs/test_metadata.json', help = 'the json file about metadata of testing datset')
     args = parser.parse_args()
 
     # Model and processor setup
@@ -170,7 +171,9 @@ def main():
         rag_results = json.load(file)
     with open(args.convdata, 'r') as file:
         convdata = json.load(file)
-    prompt_processor = PromptProcessor(convdata, rag_results)
+    with open(args.metadata_path, 'r') as file:
+        metadata = json.load(file)
+    prompt_processor = PromptProcessor(convdata, rag_results,metadata)
     
     # Load the dataset
     print("Loading dataset...")

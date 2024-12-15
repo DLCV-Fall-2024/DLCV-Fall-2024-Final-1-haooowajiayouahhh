@@ -78,6 +78,28 @@ class TrainingArguments(transformers.TrainingArguments):
     lora_bias: str = field(default="none")
     mm_projector_lr: Optional[float] = None
     group_by_modality_length: bool = field(default=False)
+
+def get_system_prompt(task_type):
+    """Get the system prompt in LLaVA conversation format"""
+    system_messages = {
+        "general": "You are an autonomous driving perception expert specializing in comprehensive scene analysis.",
+        "suggestion": "You are an autonomous driving expert specializing in providing safe driving recommendations.",
+        "regional": "You are an autonomous driving agent that can capture details of specific objects in the red boxes ."
+    }
+    
+    return {
+        "from": "system",
+        "value": system_messages.get(task_type, system_messages[task_type])
+    }
+
+def format_conversation(system_prompt, data_prompt):
+    """Format the complete conversation in LLaVA format"""
+    conversation = [
+        system_prompt,
+        data_prompt
+    ]
+    return conversation
+
 class HuggingfaceSupervisedDataset(Dataset):
     def __init__(self, data_path: str,
                  processor: AutoProcessor,
@@ -123,6 +145,8 @@ class HuggingfaceSupervisedDataset(Dataset):
             #add extra infos for input text
             image_id=sources[0]['id']
             prompt_processor=PromptProcessor(self.data_args.convdata, self.data_args.rag_results, self.data_args.metadata_path)
+            system_text=get_system_prompt(image_id.split('_')[1])
+            input_text=format_conversation(system_text, input_text)
             input_text= prompt_processor.get_prompts(image_id, input_text, 'vit_similar_images')
             print("[DEBUG@HuggingfaceSupervisedDataset] input_text:\n", input_text)
             # Process inputs
