@@ -110,14 +110,15 @@ def process_batch(batch: List[Dict], processor, model, rag_prompt_processor, dev
             conversation = format_conversation(system_prompt, original_conversations[0])
             
             # Convert conversation to string format
-            prompt_str = ""
+            prompt_str = "USER: "
             for message in conversation:
                 role = "USER: " if message["from"] in ["human", "system"] else "ASSISTANT: "
-                prompt_str += f"{role}{message['value']} "
+                prompt_str += f"{message['value']}"
             question_message = prompt_str.strip()
 
             full_prompt = rag_prompt_processor.get_prompts(image_id, question_message, 'vit_similar_images') + " ASSISTANT: "
-
+            print("Image ID: ",image_id)
+            print("input prompt: ",full_prompt )
             
             images.append(image)
             prompts.append(full_prompt)
@@ -155,7 +156,7 @@ def main():
     parser.add_argument('--checkpoint_dir', type=str, default='./checkpoints/llava-v1.5-13b-task-lora', help='Path to checkpoint directory')
     parser.add_argument('--batch_size', type=int, default=1, help='Batch size for inference')
     parser.add_argument('--device', type=str, default='cuda', help='Device to use for inference')
-    parser.add_argument('--rag_results', type=str, default='./storage/vitpatch32rag_test.json', help = 'the json file of rag_result')
+    parser.add_argument('--rag_results', type=str, default='./storage/rag_test.json', help = 'the json file of rag_result')
     parser.add_argument('--convdata', type=str, default='./storage/conversations.json', help = 'the json file about conversation and image_id of training datset')
     parser.add_argument('--metadata_path', type=str, default='./processed_outputs/test_metadata.json', help = 'the json file about metadata of testing datset')
     args = parser.parse_args()
@@ -173,14 +174,14 @@ def main():
         convdata = json.load(file)
     with open(args.metadata_path, 'r') as file:
         metadata = json.load(file)
-    prompt_processor = PromptProcessor(convdata, rag_results,metadata)
+    prompt_processor = PromptProcessor(convdata, rag_results, metadata)
     
     # Load the dataset
     print("Loading dataset...")
-    dataset = load_dataset("ntudlcv/dlcv_2024_final1", split="test")
+    dataset = load_dataset("ntudlcv/dlcv_2024_final1", split="test[:5]")
     
     predictions = {}
-    total_items = 900  # number of test datasets
+    total_items = 5  # number of test datasets
     
     # Process batches with progress bar
     total_batches = (total_items + args.batch_size - 1) // args.batch_size

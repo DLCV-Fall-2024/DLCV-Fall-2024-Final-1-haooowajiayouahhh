@@ -1,15 +1,15 @@
 import json
 from datasets import load_dataset
 
-def get_format_objects(image_id, metadata_path):
+def get_format_objects(image_id, metadata):
     # Read metadata JSON
-    with open(metadata_path, 'r') as f:
-        metadata = json.load(f)
+    # with open(metadata_path, 'r') as f:
+    #     metadata = json.load(f)
     
     # # Get task type from image_id
     task_type = image_id.split('_')[1]  # general, regional, or suggestion
     assert task_type in ["general", "regional", "suggestion"], "Invalid task type"
-    # assert task_type =='None' or image_id.split('_')[1] == task_type, "Mismatched task type"
+    assert image_id.split('_')[1] == task_type, "Mismatched task type"
     # Get objects for this image
     objects = metadata.get(image_id, [])
     empty_message = "No objects are pre-detected in this image. Please analyze the image carefully and identify the relevant objects yourself."
@@ -96,7 +96,7 @@ class PromptProcessor:
         # Generate instruction
         prompt_generate = """Based on the provided image and detected objects, give a valid description according to the task."""
         
-        prompt_objects = get_format_objects(image_id, self.metadata_path,self.task_type)
+        prompt_objects = get_format_objects(image_id, self.metadata_path)
         
         # Combine all sections with controlled separation
         final_prompt = (

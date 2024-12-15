@@ -368,7 +368,7 @@ def main():
     os.makedirs(output_dir, exist_ok=True)
     
     # Load dataset
-    dataset = load_dataset("ntudlcv/dlcv_2024_final1", split="train",streaming=True)
+    dataset = load_dataset("ntudlcv/dlcv_2024_final1", split='test[:5]')
     # dataset = dataset.take(200)
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=4)
     # Process each image
@@ -396,7 +396,7 @@ def main():
         results[image_id] = formatted_objects
     
     # Save metadata
-    with open(os.path.join(output_dir, "train_metadata.json"), "w") as f:
+    with open(os.path.join(output_dir, "test_metadata.json"), "w") as f:
         json.dump(results, f, indent=2)
 
 if __name__ == "__main__":

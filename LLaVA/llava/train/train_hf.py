@@ -1,4 +1,6 @@
 import os
+import sys
+sys.path.append("..")
 import copy
 from dataclasses import dataclass, field
 import json
@@ -107,14 +109,14 @@ class HuggingfaceSupervisedDataset(Dataset):
                  data_args: DataArguments,task='general'):
         super(HuggingfaceSupervisedDataset, self).__init__()
         
-        self.dataset = load_dataset(data_path)
-        self.train_data = self.dataset['train']
+        self.dataset = load_dataset(data_path,split='train')
+        # self.train_data = self.dataset['train']
         if task == 'general':
-            self.train_data=dataset.filter(lambda example: example["id"].startswith("Train_general"))
+            self.train_data=self.dataset.filter(lambda example: example["id"].startswith("Train_general"))
         elif task == 'regional':
-            dataset=dataset.filter(lambda example: example["id"].startswith("Train_regional"))
+            self.train_data=self.dataset.filter(lambda example: example["id"].startswith("Train_regional"))
         elif task ==  'suggestion':
-            dataset=dataset.filter(lambda example: example["id"].startswith("Train_suggestion"))
+            self.train_data=self.dataset.filter(lambda example: example["id"].startswith("Train_suggestion"))
         self.processor = processor
         self.data_args = data_args
         self.task=task
@@ -152,11 +154,22 @@ class HuggingfaceSupervisedDataset(Dataset):
                 image = Image.open(image).convert('RGB')
             #add extra infos for input text
             image_id=sources[0]['id']
-            assert image_id.split('_')[1] == self.task         
-            prompt_processor=PromptProcessor(self.data_args.convdata, self.data_args.rag_results, self.data_args.metadata_path)
-            system_text=get_system_prompt(image_id.split('_')[1])
-            input_text=format_conversation(system_text, input_text)
-            input_text= prompt_processor.get_prompts(image_id, input_text, 'vit_similar_images')
+            assert image_id.split('_')[1] == self.task       
+            with open(self.data_args.rag_results, 'r') as file:
+                rag_results = json.load(file)
+            with open(self.data_args.convdata, 'r') as file:
+                convdata = json.load(file)
+            with open(self.data_args.metadata_path, 'r') as file:
+                metadata = json.load(file)  
+            prompt_processor=PromptProcessor(convdata, rag_results, metadata)
+            system_text=get_system_prompt(image_id.split('_')[1])['value']
+            # print(input_text)
+            prompt_str = "USER: "
+            prompt_str+=system_text
+            prompt_str+=input_text
+            question_message = prompt_str.strip()
+            print(image_id)
+            input_text= prompt_processor.get_prompts(image_id, question_message, 'vit_similar_images') + " ASSISTANT: "
             print("[DEBUG@HuggingfaceSupervisedDataset] input_text:\n", input_text)
             # Process inputs
             inputs = self.processor(
