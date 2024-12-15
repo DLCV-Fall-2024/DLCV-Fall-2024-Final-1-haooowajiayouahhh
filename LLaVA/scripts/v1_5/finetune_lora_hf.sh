@@ -5,6 +5,10 @@ deepspeed llava/train/train_mem_hf.py \
     --deepspeed ./scripts/zero2.json \
     --model_name_or_path llava-hf/llava-1.5-7b-hf \
     --data_path ntudlcv/dlcv_2024_final1 \
+    --convdata /workspace/DLCV-Fall-2024-Final-1-haooowajiayouahhh/storage/conversations.json \
+    --rag_results /workspace/DLCV-Fall-2024-Final-1-haooowajiayouahhh/storage/rag_train.json\
+    --metadata_path /workspace/DLCV-Fall-2024-Final-1-haooowajiayouahhh/processed_outputs/train_metadata.json \
+    --task 'general' \
     --vision_tower openai/clip-vit-large-patch14-336 \
     --mm_projector_type mlp2x_gelu \
     --mm_vision_select_layer -2 \

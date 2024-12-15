@@ -517,6 +517,7 @@ def train():
         **data_module
     )
 
+    print(f"########Start Training Task{data_args.task}########")
     # Train the model
     if list(pathlib.Path(training_args.output_dir).glob("checkpoint-*")):
         trainer.train(resume_from_checkpoint=True)
