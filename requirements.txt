@@ -1,4 +1,4 @@
-numpy
+numpy==1.26.0
 pycocoevalcap
 huggingface_hub
 transformers
@@ -7,6 +7,9 @@ opencv-python
 torch
 Pillow
 datasets
+
+faiss-cpu
+faiss-gpu
 
 #linting
 autoflake
