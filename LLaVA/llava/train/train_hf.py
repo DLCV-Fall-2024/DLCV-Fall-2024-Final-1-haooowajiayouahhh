@@ -479,7 +479,7 @@ def train():
         )
 
     if training_args.lora_enable:
-        from peft import LoraConfig, get_peft_model
+        from peft import LoraConfig, get_peft_model,PeftModel
         
         lora_config = LoraConfig(
             r=training_args.lora_r,
@@ -523,7 +523,8 @@ def train():
         data_args=data_args
     )
     # print(training_args)
-
+    # print("After LoRA conversion:", type(model))
+    # print("Is PeftModel?", isinstance(model, PeftModel))
     trainer = LLaVATrainer(
         model=model,
         args=training_args,
@@ -532,7 +533,8 @@ def train():
 
     print(f"########Start Training Task: {data_args.task}########")
     # Train the model
-    if list(pathlib.Path(training_args.output_dir).glob("checkpoint-*")):
+    # if list(pathlib.Path(training_args.output_dir).glob("checkpoint-*")):
+    if False:
         trainer.train(resume_from_checkpoint=True)
     else:
         trainer.train()
