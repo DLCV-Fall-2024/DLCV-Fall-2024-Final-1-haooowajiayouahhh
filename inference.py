@@ -23,8 +23,8 @@ import torch
 from tqdm import tqdm
 from itertools import islice
 from typing import List, Dict
-
-from rag_usage import PromptProcessor
+from peft import PeftModel
+from prompt_processor import PromptProcessor
 
 def load_model_with_weights(base_model_id, checkpoint_dir):
     # Load the base model
@@ -35,23 +35,14 @@ def load_model_with_weights(base_model_id, checkpoint_dir):
         device_map="auto",  # Automatically map to GPU
         low_cpu_mem_usage=True,
     )
+    print("Loading LoRA adapter weights...")
+    # model.load_adapter(checkpoint_dir)
+
+    model = PeftModel.from_pretrained(
+        model,
+        checkpoint_dir,
+        torch_dtype=torch.bfloat16)
     
-    # Load non-LoRA weights if they exist
-    non_lora_path = os.path.join(checkpoint_dir, "non_lora_trainables.bin")
-    if os.path.exists(non_lora_path):
-        print("Loading non-LoRA weights...")
-        non_lora_state = torch.load(non_lora_path, map_location="cpu")
-        model.load_state_dict(non_lora_state, strict=False)
-    
-    # Check if adapter weights exist
-    adapter_path = os.path.join(checkpoint_dir, "adapter_model.bin")
-    if os.path.exists(adapter_path):
-        print("Loading LoRA adapter weights...")
-        model = PeftModel.from_pretrained(
-            model,
-            checkpoint_dir,
-            torch_dtype=torch.bfloat16,
-        )
     
     return model
 
@@ -110,14 +101,15 @@ def process_batch(batch: List[Dict], processor, model, rag_prompt_processor, dev
             conversation = format_conversation(system_prompt, original_conversations[0])
             
             # Convert conversation to string format
-            prompt_str = ""
+            prompt_str = "USER: "
             for message in conversation:
                 role = "USER: " if message["from"] in ["human", "system"] else "ASSISTANT: "
-                prompt_str += f"{role}{message['value']} "
+                prompt_str += f"{message['value']}"
             question_message = prompt_str.strip()
 
             full_prompt = rag_prompt_processor.get_prompts(image_id, question_message, 'vit_similar_images') + " ASSISTANT: "
-
+            print("Image ID: ",image_id)
+            print("input prompt: ",full_prompt )
             
             images.append(image)
             prompts.append(full_prompt)
@@ -134,7 +126,7 @@ def process_batch(batch: List[Dict], processor, model, rag_prompt_processor, dev
     with torch.no_grad():
         outputs = model.generate(
             **inputs,
-            max_new_tokens=200,
+            max_new_tokens=500,
             do_sample=False,
             pad_token_id=processor.tokenizer.pad_token_id
         )
@@ -153,10 +145,12 @@ def main():
     parser = argparse.ArgumentParser(description="LLaVA Batch Inference on HF Dataset")
     parser.add_argument('--output_path', type=str, default='submission.json', help='Output file for predictions')
     parser.add_argument('--checkpoint_dir', type=str, default='./checkpoints/llava-v1.5-13b-task-lora', help='Path to checkpoint directory')
-    parser.add_argument('--batch_size', type=int, default=1, help='Batch size for inference')
+    parser.add_argument('--batch_size', type=int, default=4, help='Batch size for inference')
     parser.add_argument('--device', type=str, default='cuda', help='Device to use for inference')
-    parser.add_argument('--rag_results', type=str, default='./storage/vitpatch32rag_test.json', help = 'the json file of rag_result')
+    parser.add_argument('--rag_results', type=str, default='./storage/rag_test.json', help = 'the json file of rag_result')
     parser.add_argument('--convdata', type=str, default='./storage/conversations.json', help = 'the json file about conversation and image_id of training datset')
+    parser.add_argument('--metadata_path', type=str, default='./processed_outputs/test_metadata.json', help = 'the json file about metadata of testing datset')
+    parser.add_argument('--task_type', type=str, default='general', help='Task type for inference')
     args = parser.parse_args()
 
     # Model and processor setup
@@ -165,19 +159,28 @@ def main():
     model = load_model_with_weights(base_model_id, args.checkpoint_dir)
     model.to(args.device)
 
+
     #RAG and promptprocessor setup
     with open(args.rag_results, 'r') as file:
         rag_results = json.load(file)
     with open(args.convdata, 'r') as file:
         convdata = json.load(file)
-    prompt_processor = PromptProcessor(convdata, rag_results)
+    with open(args.metadata_path, 'r') as file:
+        metadata = json.load(file)
+    prompt_processor = PromptProcessor(convdata, rag_results, metadata)
     
     # Load the dataset
-    print("Loading dataset...")
+    print(f"Loading dataset...{args.task_type}")
     dataset = load_dataset("ntudlcv/dlcv_2024_final1", split="test")
+    if args.task_type=="general":
+        dataset = dataset.filter(lambda example: example["id"].startswith("Test_general"))
+    elif args.task_type=="suggestion":
+        dataset = dataset.filter(lambda example: example["id"].startswith("Test_suggestion"))
+    elif args.task_type=="regional":
+        dataset = dataset.filter(lambda example: example["id"].startswith("Test_regional"))
     
     predictions = {}
-    total_items = 900  # number of test datasets
+    total_items = 300  # number of test datasets
     
     # Process batches with progress bar
     total_batches = (total_items + args.batch_size - 1) // args.batch_size
@@ -193,8 +196,9 @@ def main():
                 torch.cuda.empty_cache()
     
     # Write predictions to JSON file
-    print(f"\nSaving predictions to {args.output_path}")
-    with open(args.output_path, "w") as f:
+    output_path=f"submission_{args.task_type}.json"
+    print(f"\nSaving predictions to {output_path}")
+    with open(output_path, "w") as f:
         json.dump(predictions, f, indent=4)
     
     print("Done!")

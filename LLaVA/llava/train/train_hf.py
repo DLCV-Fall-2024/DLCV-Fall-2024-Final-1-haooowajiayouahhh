@@ -1,4 +1,6 @@
 import os
+import sys
+sys.path.append("..")
 import copy
 from dataclasses import dataclass, field
 import json
@@ -17,7 +19,7 @@ from llava.train.llava_trainer import LLaVATrainer
 
 from llava.model import *
 from PIL import Image
-
+from prompt_processor import PromptProcessor
 local_rank = None
 
 @dataclass
@@ -40,6 +42,12 @@ class ModelArguments:
 class DataArguments:
     data_path: str = field(default=None,
                           metadata={"help": "Path to the training data."})
+    convdata: str = field(default=None,
+                          metadata={"help": "Path to the conversation data."})
+    rag_results: str = field(default=None,
+                            metadata={"help": "Path to the RAG results."})
+    metadata_path: str = field(default=None,
+                              metadata={"help": "Path to the metadata."})
     is_multimodal: bool = False
     image_aspect_ratio: str = 'square'
     model_max_length: int = field(
@@ -48,6 +56,7 @@ class DataArguments:
             "help": "Maximum sequence length. Sequences will be right padded."
         },
     )
+    task: str = field(default="general")
 
 @dataclass
 class TrainingArguments(transformers.TrainingArguments):
@@ -72,16 +81,45 @@ class TrainingArguments(transformers.TrainingArguments):
     lora_bias: str = field(default="none")
     mm_projector_lr: Optional[float] = None
     group_by_modality_length: bool = field(default=False)
+
+def get_system_prompt(task_type):
+    """Get the system prompt in LLaVA conversation format"""
+    system_messages = {
+        "general": "You are an autonomous driving perception expert specializing in comprehensive scene analysis.",
+        "suggestion": "You are an autonomous driving expert specializing in providing safe driving recommendations.",
+        "regional": "You are an autonomous driving agent that can capture details of specific objects in the red boxes ."
+    }
+    
+    return {
+        "from": "system",
+        "value": system_messages.get(task_type, system_messages[task_type])
+    }
+
+def format_conversation(system_prompt, data_prompt):
+    """Format the complete conversation in LLaVA format"""
+    conversation = [
+        system_prompt,
+        data_prompt
+    ]
+    return conversation
+
 class HuggingfaceSupervisedDataset(Dataset):
     def __init__(self, data_path: str,
                  processor: AutoProcessor,
-                 data_args: DataArguments):
+                 data_args: DataArguments,task='general'):
         super(HuggingfaceSupervisedDataset, self).__init__()
         
-        self.dataset = load_dataset(data_path)
-        self.train_data = self.dataset['train']
+        self.dataset = load_dataset(data_path,split='train')
+        # self.train_data = self.dataset['train']
+        if task == 'general':
+            self.train_data=self.dataset.filter(lambda example: example["id"].startswith("Train_general"))
+        elif task == 'regional':
+            self.train_data=self.dataset.filter(lambda example: example["id"].startswith("Train_regional"))
+        elif task ==  'suggestion':
+            self.train_data=self.dataset.filter(lambda example: example["id"].startswith("Train_suggestion"))
         self.processor = processor
         self.data_args = data_args
+        self.task=task
 
     def __len__(self):
         return len(self.train_data)
@@ -114,7 +152,25 @@ class HuggingfaceSupervisedDataset(Dataset):
             image = sources[0]['image']
             if not isinstance(image, Image.Image):
                 image = Image.open(image).convert('RGB')
-                
+            #add extra infos for input text
+            image_id=sources[0]['id']
+            assert image_id.split('_')[1] == self.task       
+            with open(self.data_args.rag_results, 'r') as file:
+                rag_results = json.load(file)
+            with open(self.data_args.convdata, 'r') as file:
+                convdata = json.load(file)
+            with open(self.data_args.metadata_path, 'r') as file:
+                metadata = json.load(file)  
+            prompt_processor=PromptProcessor(convdata, rag_results, metadata)
+            system_text=get_system_prompt(image_id.split('_')[1])['value']
+            # print(input_text)
+            prompt_str = "USER: "
+            prompt_str+=system_text
+            prompt_str+=input_text
+            question_message = prompt_str.strip()
+            # print(image_id)
+            input_text= prompt_processor.get_prompts(image_id, question_message, 'vit_similar_images') + " ASSISTANT: "
+            # print("[DEBUG@HuggingfaceSupervisedDataset] input_text:\n", input_text)
             # Process inputs
             inputs = self.processor(
                 images=image,
@@ -222,9 +278,10 @@ def make_supervised_data_module(processor: AutoProcessor,
     train_dataset = HuggingfaceSupervisedDataset(
         data_path=data_args.data_path,
         processor=processor,
-        data_args=data_args
+        data_args=data_args,
+        task=data_args.task
     )
-    print(len(train_dataset))
+    # print(len(train_dataset))
     data_collator = DataCollatorForLLaVA(
         processor=processor,
         max_length=data_args.model_max_length
@@ -344,9 +401,9 @@ def print_trainable_parameters(model):
             trainable_params.append(f"Module name: {name}, Shape: {param.shape}")
             trainable_param += num_params
     
-    print("Trainable modules:")
-    for param in trainable_params:
-        print(param)
+    # print("Trainable modules:")
+    # for param in trainable_params:
+    #     print(param)
     
     print(f"\nTotal Parameters: {all_param:,}")
     print(f"Trainable Parameters: {trainable_param:,}")
@@ -422,7 +479,7 @@ def train():
         )
 
     if training_args.lora_enable:
-        from peft import LoraConfig, get_peft_model
+        from peft import LoraConfig, get_peft_model,PeftModel
         
         lora_config = LoraConfig(
             r=training_args.lora_r,
@@ -465,16 +522,19 @@ def train():
         processor=processor,
         data_args=data_args
     )
-    print(training_args)
-
+    # print(training_args)
+    # print("After LoRA conversion:", type(model))
+    # print("Is PeftModel?", isinstance(model, PeftModel))
     trainer = LLaVATrainer(
         model=model,
         args=training_args,
         **data_module
     )
 
+    print(f"########Start Training Task: {data_args.task}########")
     # Train the model
-    if list(pathlib.Path(training_args.output_dir).glob("checkpoint-*")):
+    # if list(pathlib.Path(training_args.output_dir).glob("checkpoint-*")):
+    if False:
         trainer.train(resume_from_checkpoint=True)
     else:
         trainer.train()
