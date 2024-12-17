@@ -22,13 +22,23 @@ def get_format_objects(image_id, metadata):
         
     elif task_type == "suggestion":
         if not objects:
-            return empty_message
-        description = """Here are the immediately relevant objects detected in the image that may require immediate attention for driving decisions."""
-        # Filter objects - keep only immediate and short range
+            return "No objects detected. Please analyze the scene and provide general driving recommendations appropriate for this environment and situation."
+    
+        description = """Here are the key objects detected in the scene. Based on these and the overall driving environment, provide appropriate driving suggestions covering:
+- General speed and following distance recommendations
+- Basic safety precautions for this type of road/area
+- Relevant traffic rules and regulations
+- Common driving practices for this scenario"""
+    
+    # Filter objects - keep only immediate and short range
         if isinstance(objects, dict):
             for category in objects:
                 objects[category] = [obj for obj in objects[category] 
-                                   if obj['depth_category'] in ['immediate', 'short range']]
+                                if obj['depth_category'] in ['immediate', 'short range']]
+            
+            # If after filtering, no immediate/short range objects remain
+            if not any(objects.values()):
+                return "While no immediate objects are detected, please provide general driving recommendations appropriate for this road environment and situation."
                 
     elif task_type == "regional":
         if not objects:
@@ -84,8 +94,12 @@ class PromptProcessor:
         prompt_task_description = question_message.strip()
 
         # Study examples header
-        prompt_study_examples = """Below are some example prompts provided solely to help you understand how to analyze the input image. They come from similar driving scenarios but may contain different objects and situations that you should not assume are present in the current image."""
-
+        prompt_study_examples = """Below are example prompts that demonstrate the expected FORMAT for your response. You should:
+- Copy the writing style and structure
+- Follow how objects and their impacts are described
+- Match the level of detail and organization
+These examples come from similar driving scenarios but may contain different objects and situations that you should not assume are present in the current image."""
+        # print(prompt_study_examples)
         # Format examples with numbering - limit to num_examples
         prompt_examples = ""
         example_image_ids = self.rag_results[image_id]
@@ -109,55 +123,3 @@ class PromptProcessor:
         )
 
         return final_prompt
-
-def main():
-    # Load resources
-    with open("/work/dlhlp5689lab/DLCV/DLCV-Fall-2024-Final-1-haooowajiayouahhh/storage/vitpatch32rag_test.json", 'r') as file:
-        rag_results = json.load(file)
-    with open("/work/dlhlp5689lab/DLCV/DLCV-Fall-2024-Final-1-haooowajiayouahhh/storage/conversations.json", 'r') as file:
-        convdata = json.load(file)
-        
-    metadata_path = "/work/dlhlp5689lab/DLCV/DLCV-Fall-2024-Final-1-haooowajiayouahhh/processed_outputs/test_metadata.json"
-    
-    # Initialize prompt processor
-    prompt_processor = PromptProcessor(convdata, rag_results, metadata_path)
-
-    # Load dataset
-    dataset = load_dataset("ntudlcv/dlcv_2024_final1", split="test")
-
-    # Set hyperparameters
-    num_examples = 2  # Number of examples to show in prompts
-    samples_per_task = 5  # Number of images to test per task type
-
-    # Test for each task type
-    task_types = ['general', 'regional', 'suggestion']
-    
-    for task_type in task_types:
-        print(f"\n{'='*50}")
-        print(f"Testing {task_type.upper()} task:")
-        print(f"{'='*50}\n")
-        
-        # Find first two images for this task type
-        count = 0
-        for item in dataset:
-            if task_type in item['id'].lower():
-                # Get question message
-                question_message = ""
-                for conv in item['conversations']:
-                    if conv["from"] in ["human", "system"]:
-                        question_message += conv["value"] + " "
-                question_message = question_message.strip()
-
-                # Generate and print prompt
-                print(f"Image ID: {item['id']}")
-                print("-" * 30)
-                final_prompt = prompt_processor.get_prompts(item['id'], question_message, 'vit_similar_images', num_examples)
-                print(final_prompt)
-                print("\n")
-                
-                count += 1
-                if count >= samples_per_task:
-                    break
-                
-if __name__ == "__main__":
-    main()
