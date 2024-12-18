@@ -105,7 +105,7 @@ These examples come from similar driving scenarios but may contain different obj
         example_image_ids = self.rag_results[image_id]
         for i, idx in enumerate(example_image_ids[baseOn][:num_examples], 1):  # Limit examples
             conv = self.convdata[idx].strip()
-            prompt_examples += f"\n{i}. {conv}\n"
+            prompt_examples += f"\n{conv}\n"
 
         # Generate instruction
         prompt_generate = """Based on the provided image and detected objects, give a valid description according to the task."""
