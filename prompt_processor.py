@@ -45,7 +45,7 @@ def get_format_objects(image_id, metadata):
             return "No object is detected in the specified region. Please analyze the region marked by the red rectangle and describe what you see."
         description = """Here is the object detected in the specified region. Please verify this detection and provide a detailed description of the object's appearance and its potential impact on driving behavior."""
         obj = objects[0]
-        return f"{description}\n{chr(10)}A {obj['label']} is detected in the {obj['position']} of the image."
+        return f"{description}\n{chr(10)}A {obj['label']} is detected at {obj['depth_category']} in the {obj['position']} of the image."
 
     # Format objects for general and suggestion tasks
     if task_type in ["general", "suggestion"]:
@@ -65,7 +65,7 @@ def get_format_objects(image_id, metadata):
                 for (label, depth, position), count in object_groups.items():
                     count_text = f"{count} " if count > 1 else "a "
                     plural = "s" if count > 1 else ""
-                    category_texts.append(f"{count_text}{label}{plural} in the {position} of the image.")
+                    category_texts.append(f"{count_text}{label}{plural} at {depth} in the {position} of the image.")
                 
                 if category_texts:
                     object_lines.append(f"{category.replace('_', ' ').title()}: {', '.join(category_texts)}")
