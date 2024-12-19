@@ -45,3 +45,24 @@ python3 inference.py --output_path --checkpoint_dir --batch_size --device --rag_
 2. ensure you have convdata train_metadata and rag_results (already pushed to github...)
 3. modify the --task in scripts/v1_5/finetune_lora_hf.sh (task: 'general', 'regional', 'suggestion')
 4. modify the --output_dir
+
+
+#haotian2hf
+1. cd LLaVA/llava
+2. run convert_haotian2hf.py --old_ckpt_path "path to the ckpt of haotianllava" --save_path "a path to save the result"
+3. or just import function convert_llava_llama_to_hf(), it will return a prepared llava model and processor
+4. Caution!!! the model need to transform to torch.float16 when you use it.
+for example,
+```bash
+condition 1:
+model, processor=convert_llava_llama_to_hf()
+model.to("cuda", dtype=torch.float16)
+
+condition 2:
+model = LlavaForConditionalGeneration.from_pretrained("llava-hf/llava-1.5-7b-hf")
+state_dict = torch.load(state_dict_path, map_location="cpu")
+model.load_state_dict(state_dict, strict=True, assign=True)
+model.to('cuda', dtype=torch.float16)
+```
+
+
