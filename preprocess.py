@@ -120,8 +120,8 @@ def detect_objects(image, model, processor, device="cuda"):
     results = processor.post_process_grounded_object_detection(
         outputs,
         inputs.input_ids,
-        box_threshold=0.3,
-        text_threshold=0.25,
+        box_threshold=0.25,
+        text_threshold=0.2,
         target_sizes=[image.size[::-1]]
     )
     return results
@@ -139,7 +139,7 @@ def get_depth_category(depth_value):
             return category
     # return "long range"
     
-def get_position(bbox, image_width):
+def get_position(bbox, image_width, image_height):
     """
     Determine the horizontal position of an object based on its bounding box center
     
@@ -148,20 +148,31 @@ def get_position(bbox, image_width):
         image_width: Width of the full image
         
     Returns:
-        str: 'left', 'middle', or 'right'
+        int: 0 ~ 9, top row 0 1 2 middle 3 4 5 and so on 
     """
     # Calculate center x-coordinate of the bounding box
     center_x = (bbox[0] + bbox[2]) / 2
+    center_y = (bbox[1] + bbox[3]) / 2
     
     # Define the boundaries for three equal sections
     third_width = image_width / 3
+    third_height = image_height / 3
     
     if center_x < third_width:
-        return "left"
+        x_idx = 0
     elif center_x < 2 * third_width:
-        return "middle"
+        x_idx = 1
     else:
-        return "right"
+        x_idx = 2
+        
+    if center_y < third_height:
+        y_idx = 0
+    elif center_y < 2 * third_height:
+        y_idx = 1
+    else:
+        y_idx = 2
+        
+    return x_idx + 3 * y_idx
 
 def clean_label(label):
     # Get all valid labels from coda_categories
@@ -222,7 +233,7 @@ def process_image(image, depth_pipe, obj_model, obj_processor, device):
         avg_depth = float(np.mean(roi_depth))
         avg_depth=(avg_depth-depth_min)/(depth_max-depth_min)
         # print("avg_depth: ",avg_depth)
-        position = get_position(box, w)
+        position = get_position(box, w, h)
     
         
         label = clean_label(label)
@@ -243,7 +254,7 @@ def process_image(image, depth_pipe, obj_model, obj_processor, device):
             "label": label,
             # "confidence": float(score),
             "bbox": box.tolist(),
-            "depth_value": avg_depth,
+            #"depth_value": avg_depth,
             "depth_category": get_depth_category(avg_depth),
             "position":position
         })
@@ -252,7 +263,7 @@ def process_image(image, depth_pipe, obj_model, obj_processor, device):
 
 def format_objects(task, objects, image, image_id):
     """
-    Format detected objects into CODA-LM categories
+    Format detected objects into CODA-LM categories, excluding bbox information
     
     Args:
         task: "general", "suggestion", or "regional"
@@ -264,6 +275,9 @@ def format_objects(task, objects, image, image_id):
         For general/suggestion: Dictionary with 7 CODA categories
         For regional: List of objects in red box
     """
+    def remove_bbox(obj):
+        return {k: v for k, v in obj.items() if k != 'bbox'}
+
     if task == "general":
         formatted_result = {
             'vehicles': [],
@@ -275,10 +289,9 @@ def format_objects(task, objects, image, image_id):
             'other_objects': []
         }
         
-        # Sort each object into its appropriate category
         for obj in objects:
             category = get_object_category(obj['label'])
-            formatted_result[category].append(obj)
+            formatted_result[category].append(remove_bbox(obj))
             
         return formatted_result
     
@@ -293,18 +306,16 @@ def format_objects(task, objects, image, image_id):
             'other_objects': []
         }
         
-        # Sort each object into its appropriate category
         for obj in objects:
             category = get_object_category(obj['label'])
-            formatted_result[category].append(obj)
+            formatted_result[category].append(remove_bbox(obj))
             
         return formatted_result
     
-    elif task == "regional" :
+    elif task == "regional":
         img_np = np.array(image)
         img_np = cv2.cvtColor(img_np, cv2.COLOR_RGB2BGR)
         
-        # Define range for red color in BGR
         lower_red = np.array([0, 0, 150])
         upper_red = np.array([50, 50, 255])
         mask = cv2.inRange(img_np, lower_red, upper_red)
@@ -315,9 +326,8 @@ def format_objects(task, objects, image, image_id):
             x, y, w, h = cv2.boundingRect(largest_contour)
             red_box = [x, y, x+w, y+h]
             
-            # Find object with highest IoU
             best_obj = None
-            best_iou = 0.7  # Minimum IoU threshold
+            best_iou = 0.5
             
             for obj in objects:
                 obj_box = obj['bbox']
@@ -326,11 +336,8 @@ def format_objects(task, objects, image, image_id):
                     best_iou = iou
                     best_obj = obj
             
-            # Print clean output
-            # print(f"\nImage {image_id}:", end=" ")
             if best_obj:
-                # print(best_obj['label'])
-                return [best_obj]
+                return [remove_bbox(best_obj)]
             else:
                 print("Nothing found in red box")
                 return []
@@ -364,12 +371,12 @@ def main():
     depth_pipe = pipeline("depth-estimation", model="depth-anything/Depth-Anything-V2-large-hf", device=device)
     
     # Setup directories
-    output_dir = "processed_outputs"
+    output_dir = "processed_outputs_v2"
     os.makedirs(output_dir, exist_ok=True)
     
     # Load dataset
-    dataset = load_dataset("ntudlcv/dlcv_2024_final1", split='test[:5]')
-    # dataset = dataset.take(200)
+    dataset = load_dataset("ntudlcv/dlcv_2024_final1", split='test', streaming = True)
+    # dataset = dataset.take(3)
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=4)
     # Process each image
     print("Processing images...")
@@ -396,12 +403,15 @@ def main():
         results[image_id] = formatted_objects
     
     # Save metadata
-    with open(os.path.join(output_dir, "test_metadata.json"), "w") as f:
+    # with open(os.path.join(output_dir, "test_metadata.json"), "w") as f:
+    #     json.dump(results, f, indent=2)
+    #     print("saved?")
+    with open("test_metadata.json", "w") as f:
         json.dump(results, f, indent=2)
+        print("saved?")
 
 if __name__ == "__main__":
+    # output_dir = "processed_outputs"
+    # print(os.path.join(output_dir, "test_metadata.json"))
     main()
-    unique_invalid_labels = sorted(set(invalid_labels))  # Convert to set to remove duplicates
-    print("\nUnique Invalid Labels:")
-    for label in unique_invalid_labels:
-        print(label)
+    
