@@ -49,7 +49,10 @@ python3 inference.py --output_path --checkpoint_dir --batch_size --device --rag_
 
 #haotian2hf
 1. cd LLaVA/llava
-2. run convert_haotian2hf.py --old_ckpt_path "path to the ckpt of haotianllava" --save_path "a path to save the result"
+2. run 
+```bash
+python3 convert_haotian2hf.py --old_ckpt_dir "path to the ckptdir of haotianllava" --save_path "a path to save the result"
+```
 3. or just import function convert_llava_llama_to_hf(), it will return a prepared llava model and processor
 4. Caution!!! the model need to transform to torch.float16 when you use it.
 for example,

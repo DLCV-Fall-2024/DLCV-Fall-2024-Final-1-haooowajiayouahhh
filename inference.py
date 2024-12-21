@@ -25,25 +25,39 @@ from itertools import islice
 from typing import List, Dict
 from peft import PeftModel
 from prompt_processor import PromptProcessor
+from llava.convert_haotian2hf import convert_llava_llama_to_hf
 
 def load_model_with_weights(base_model_id, checkpoint_dir):
     # Load the base model
     config = transformers.AutoConfig.from_pretrained(base_model_id, trust_remote_code=True)
     # config.attn_config['attn_impl'] = "triton"
     model = transformers.LlavaForConditionalGeneration.from_pretrained(
-        base_model_id,  
+        checkpoint_dir,  
         device_map="auto",  # Automatically map to GPU
         low_cpu_mem_usage=True,
     )
-    print("Loading LoRA adapter weights...")
+    print("Loaded pretrained model:",base_model_id)
+    # print("Loading LoRA adapter weights...")
     # model.load_adapter(checkpoint_dir)
 
-    model = PeftModel.from_pretrained(
-        model,
-        checkpoint_dir,
-        torch_dtype=torch.bfloat16)
+    # model = PeftModel.from_pretrained(
+    #     model,
+    #     checkpoint_dir,
+    #     torch_dtype=torch.bfloat16)
     
     
+    non_lora_path=os.path.join(checkpoint_dir, "non_lora_trainables.bin")
+    if os.path.exists(non_lora_path):
+        print("Loading non-lora weights")
+        non_lora_state=torch.load(non_lora_path, map_location='cpu')
+        model.load_state_dict(non_lora_state,strict=False)
+    adapter_path=os.path.join(checkpoint_dir, "adapter_model.bin")
+    if os.path.exists(adapter_path):
+        print("Loading LoRA weights")
+        model=PeftModel.from_pretrained(
+            model,checkpoint_dir,torch_dtype=torch.bfloat16,
+        )
+    print("Successfully Load Checkpoint...")
     return model
 
 def get_task_type_from_id(image_id):
@@ -109,7 +123,7 @@ def process_batch(batch: List[Dict], processor, model, rag_prompt_processor, dev
 
             full_prompt = rag_prompt_processor.get_prompts(image_id, question_message, 'vit_similar_images') + " ASSISTANT: "
             print("Image ID: ",image_id)
-            print("input prompt: ",full_prompt )
+            # print("input prompt: ",full_prompt )
             
             images.append(image)
             prompts.append(full_prompt)
@@ -144,8 +158,8 @@ def process_batch(batch: List[Dict], processor, model, rag_prompt_processor, dev
 def main():
     parser = argparse.ArgumentParser(description="LLaVA Batch Inference on HF Dataset")
     parser.add_argument('--output_path', type=str, default='submission.json', help='Output file for predictions')
-    parser.add_argument('--checkpoint_dir', type=str, default='./checkpoints/llava-v1.5-13b-task-lora', help='Path to checkpoint directory')
-    parser.add_argument('--batch_size', type=int, default=4, help='Batch size for inference')
+    parser.add_argument('--checkpoint_dir', type=str, default='./checkpoints/llava-v1.5-7b-task-lora', help='Path to checkpoint directory')
+    parser.add_argument('--batch_size', type=int, default=3, help='Batch size for inference')
     parser.add_argument('--device', type=str, default='cuda', help='Device to use for inference')
     parser.add_argument('--rag_results', type=str, default='./storage/rag_test.json', help = 'the json file of rag_result')
     parser.add_argument('--convdata', type=str, default='./storage/conversations.json', help = 'the json file about conversation and image_id of training datset')
@@ -155,7 +169,8 @@ def main():
 
     # Model and processor setup
     base_model_id = "llava-hf/llava-1.5-7b-hf"
-    processor = transformers.AutoProcessor.from_pretrained(base_model_id)
+    processor = transformers.AutoProcessor.from_pretrained(base_model_id, revision='a272c74')
+    # processor = transformers.AutoProcessor.from_pretrained(base_model_id)
     model = load_model_with_weights(base_model_id, args.checkpoint_dir)
     model.to(args.device)
 
@@ -171,17 +186,17 @@ def main():
     
     # Load the dataset
     print(f"Loading dataset...{args.task_type}")
-    dataset = load_dataset("ntudlcv/dlcv_2024_final1", split="test")
-    if args.task_type=="general":
-        dataset = dataset.filter(lambda example: example["id"].startswith("Test_general"))
-    elif args.task_type=="suggestion":
-        dataset = dataset.filter(lambda example: example["id"].startswith("Test_suggestion"))
-    elif args.task_type=="regional":
-        dataset = dataset.filter(lambda example: example["id"].startswith("Test_regional"))
+    dataset = load_dataset("ntudlcv/dlcv_2024_final1", split="test[:150]")
+    # if args.task_type=="general":
+    #     dataset = dataset.filter(lambda example: example["id"].startswith("Test_general"))
+    # elif args.task_type=="suggestion":
+    #     dataset = dataset.filter(lambda example: example["id"].startswith("Test_suggestion"))
+    # elif args.task_type=="regional":
+        # dataset = dataset.filter(lambda example: example["id"].startswith("Test_regional"))
     
     predictions = {}
-    total_items = 300  # number of test datasets
-    
+    total_items = 150  # number of test datasets
+    dataset=dataset.take(total_items)
     # Process batches with progress bar
     total_batches = (total_items + args.batch_size - 1) // args.batch_size
     
@@ -196,7 +211,8 @@ def main():
                 torch.cuda.empty_cache()
     
     # Write predictions to JSON file
-    output_path=f"submission_{args.task_type}.json"
+    # output_path=f"submission_{args.task_type}.json"
+    output_path ="submission.json"
     print(f"\nSaving predictions to {output_path}")
     with open(output_path, "w") as f:
         json.dump(predictions, f, indent=4)

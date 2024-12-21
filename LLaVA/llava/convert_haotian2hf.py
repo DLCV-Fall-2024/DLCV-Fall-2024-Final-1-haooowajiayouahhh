@@ -110,7 +110,7 @@ def convert_state_dict_to_hf(state_dict):
     return new_state_dict
 
 
-def convert_llava_llama_to_hf(text_model_id="lmsys/vicuna-7b-v1.5", vision_model_id="openai/clip-vit-large-patch14-336", new_model_id="llava-hf/llava-1.5-7b-hf", old_model_id="liuhaotian/llava-v1.5-7b", old_model_ckpt_path = "../checkpoints/llava-v1.5-7b/", save_path=None):
+def convert_llava_llama_to_hf(text_model_id="lmsys/vicuna-7b-v1.5", vision_model_id="openai/clip-vit-large-patch14-336", new_model_id="llava-hf/llava-1.5-7b-hf", old_model_id="liuhaotian/llava-v1.5-7b", old_model_ckpt_path = "../checkpoints/llava-v1.5-7b-task-lora-exp1", save_path=None):
     torch.set_default_dtype(torch.float16)
     text_config = AutoConfig.from_pretrained(text_model_id)
     tokenizer = AutoTokenizer.from_pretrained(text_model_id)
@@ -130,10 +130,13 @@ def convert_llava_llama_to_hf(text_model_id="lmsys/vicuna-7b-v1.5", vision_model
     with torch.device("meta"):
         model = LlavaForConditionalGeneration(config)
         
-
-    state_dict = torch.load(old_model_ckpt_path, map_location="cpu")
-
-    state_dict = convert_state_dict_to_hf(state_dict)
+    # state_dict = torch.load(old_model_ckpt_path, map_location="cpu")
+    _, old_model, _, _ = load_pretrained_model(
+        model_path=old_model_ckpt_path,
+        model_base="liuhaotian/llava-v1.5-7b",
+        model_name=get_model_name_from_path(old_model_ckpt_path)
+    )
+    state_dict = convert_state_dict_to_hf(old_model.state_dict())
     model.load_state_dict(state_dict, strict=True, assign=True)
 
     pre_expansion_embeddings = model.language_model.model.embed_tokens.weight.data
@@ -158,8 +161,9 @@ def convert_llava_llama_to_hf(text_model_id="lmsys/vicuna-7b-v1.5", vision_model
     )
     llava_model = LlavaForConditionalGeneration.from_pretrained(new_model_id)
     llava_model.load_state_dict(model.state_dict(), strict=True, assign=True)
-    output_ckpt_path = os.path.join(save_path, "hf_model_state_dict.bin")
-    torch.save(llava_model.state_dict(),output_ckpt_path)
+    os.makedirs(os.path.join(save_path), exist_ok=True)
+    output_ckpt_path = os.path.join(save_path)
+    llava_model.save_pretrained(output_ckpt_path)
 
     # model.push_to_hub(output_hub_path)
     # processor.push_to_hub(output_hub_path)
@@ -225,11 +229,11 @@ def main():
     )
     parser.add_argument(
         "--new_model_id",
-        default="liuhaotian/llava-v1.5-7b",
+        default="llava-hf/llava-1.5-7b-hf",
     )
     parser.add_argument(
         "--old_model_ckpt_path",
-        require=True
+        required=True
     )
     parser.add_argument(
         "--save_path",
