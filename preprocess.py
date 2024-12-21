@@ -263,7 +263,7 @@ def process_image(image, depth_pipe, obj_model, obj_processor, device):
 
 def format_objects(task, objects, image, image_id):
     """
-    Format detected objects into CODA-LM categories, excluding bbox information
+    Format detected objects into CODA-LM categories, including bbox area
     
     Args:
         task: "general", "suggestion", or "regional"
@@ -275,8 +275,12 @@ def format_objects(task, objects, image, image_id):
         For general/suggestion: Dictionary with 7 CODA categories
         For regional: List of objects in red box
     """
-    def remove_bbox(obj):
-        return {k: v for k, v in obj.items() if k != 'bbox'}
+    def add_area(obj):
+        bbox = obj['bbox']
+        width = bbox[2] - bbox[0]
+        height = bbox[3] - bbox[1]
+        area = width * height
+        return {**obj, 'area': area}
 
     if task == "general":
         formatted_result = {
@@ -291,7 +295,7 @@ def format_objects(task, objects, image, image_id):
         
         for obj in objects:
             category = get_object_category(obj['label'])
-            formatted_result[category].append(remove_bbox(obj))
+            formatted_result[category].append(add_area(obj))
             
         return formatted_result
     
@@ -308,7 +312,7 @@ def format_objects(task, objects, image, image_id):
         
         for obj in objects:
             category = get_object_category(obj['label'])
-            formatted_result[category].append(remove_bbox(obj))
+            formatted_result[category].append(add_area(obj))
             
         return formatted_result
     
@@ -337,7 +341,7 @@ def format_objects(task, objects, image, image_id):
                     best_obj = obj
             
             if best_obj:
-                return [remove_bbox(best_obj)]
+                return [add_area(best_obj)]
             else:
                 print("Nothing found in red box")
                 return []
@@ -393,12 +397,12 @@ def main():
         # Process image and get results
         objects = process_image(image, depth_pipe, obj_model, obj_processor, device) # after DINO and depth anything
         # save coda'd images
-        # annotated_image = draw_boxes(image.copy(), objects)
-        # annotated_image.save(os.path.join(output_dir, f"{image_id}_detected.jpg"))
+        annotated_image = draw_boxes(image.copy(), objects)
+        annotated_image.save(os.path.join(output_dir, f"{image_id}_detected.jpg"))
         
         formatted_objects = format_objects(task, objects, image, image_id)
-        # print(f"\nImage {image_id}:", end=" ")
-        # print(formatted_objects)
+        print(f"\nImage {image_id}:", end=" ")
+        print(formatted_objects)
 
         results[image_id] = formatted_objects
     
