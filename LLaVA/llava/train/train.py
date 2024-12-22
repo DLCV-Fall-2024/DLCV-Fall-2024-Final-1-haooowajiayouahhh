@@ -36,7 +36,8 @@ from llava.model import *
 from llava.mm_utils import tokenizer_image_token
 
 from PIL import Image
-
+import sys
+sys.path.append("../")
 from prompt_processor import RAGDataHandler, CODAPromptGenerator
 
 local_rank = None
@@ -778,7 +779,8 @@ class HuggingfaceSupervisedDataset(Dataset):
                 if sentence['from'] == 'human':
                     sentence['value'] = prompt 
         
-        
+        print("[Dataset] imageid: ", image_id)
+        print("[Dataset] sources: ",sources) 
         
         data_dict = preprocess(
             sources,
@@ -860,6 +862,7 @@ def make_supervised_data_module(tokenizer: transformers.PreTrainedTokenizer,
                 data_collator=data_collator)
 
 def train(attn_implementation=None):
+    torch.cuda.empty_cache()
     global local_rank
 
     parser = transformers.HfArgumentParser(
