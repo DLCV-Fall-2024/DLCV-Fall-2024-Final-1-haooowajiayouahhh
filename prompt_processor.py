@@ -63,11 +63,11 @@ class PromptBuilder:
     }
     
     EXAMPLE_DESCRIPTIONS = {
-        "general": """Below are reference examples. Use their exact format and detail level when analyzing the current scene:""",
-        
-        "regional": """Below are reference examples. Follow their exact format when describing the marked object:""",
-        
-        "suggestion": """Below are reference examples. Match their exact format when providing driving suggestions:"""
+        "general": """These are similar driving scenarios as references. Follow their format and writing style, but analyze the current image independently:""",
+
+        "regional": """These are similar examples of describing marked objects. Follow their format and writing style, but focus on the current object:""",
+
+        "suggestion": """These are similar driving scenarios as references. Follow their format and writing style for suggestions, but focus on the current scene:"""
     }
     
     @staticmethod
@@ -167,18 +167,13 @@ class CODAPromptGenerator:
             objects_section = "The following objects have been detected (verify these in the image):\n" + \
                             self.prompt_builder.format_detected_objects(image_metadata, task_type)
         
-        if task_type == 'general':
-            last_description = "Use the exact same format and style as the examples above, but analyze objects in the current image independently. You must describe objects from ALL the seven categories (vehicles, vulnerable road users, traffic signs, traffic lights, traffic cones, barriers, other objects) that you can see in the image. Be thorough and detailed in your description. You may use detected objects as reference if given."
-        else:
-            last_description = "Use the exact same format and style as the examples above, but analyze objects in the current image independently. You may use detected objects as reference if given."
         # Combine all components
         prompt_parts = [
             task_description,
             example_description,
             formatted_examples,
             "END OF EXAMPLES",
-            objects_section,
-            last_description
+            objects_section
         ]
         
         return "\n\n".join(prompt_parts)
