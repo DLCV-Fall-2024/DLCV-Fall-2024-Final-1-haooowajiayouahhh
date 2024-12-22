@@ -206,6 +206,8 @@ def main(args):
             for image_id_rag, rag_vec in regional_vectors_for_rag.items()
             if rag_vec == presence_vector and image_id != image_id_rag
         ]
+        if len(matches) > args.min_samples:
+            matches = random.sample(matches, args.min_samples)
         combined_matches[image_id] = matches
 
     for (image_id, presence_vector), (relaxed_image_id, relaxed_presence_vecotr) in zip(suggestion_vectors.items(), relaxed_suggestion_vectors.items()):
@@ -215,6 +217,8 @@ def main(args):
             for image_id_rag, rag_vec in suggestion_vectors_for_rag.items()
             if rag_vec == presence_vector and image_id != image_id_rag
         ]
+        if len(matches) > args.min_samples:
+            matches = random.sample(matches, args.min_samples)
         combined_matches[image_id]["perfect_matches"] = matches
         match_count = len(matches)
         if match_count < args.min_samples:
@@ -230,10 +234,7 @@ def main(args):
 
     # print(combined_matches)
     # Write combined matches to a new JSON file
-    if args.relax:
-        output_file = 'processed_outputs_v2/match_results_relaxed.json'
-    else:
-        output_file = 'processed_outputs_v2/match_results.json'
+    output_file = 'processed_outputs_v2/match_results.json'
     with open(output_file, 'w') as f:
         json.dump(combined_matches, f, indent=4)
     
