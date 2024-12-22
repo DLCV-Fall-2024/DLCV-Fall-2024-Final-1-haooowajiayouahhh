@@ -15,7 +15,7 @@ from transformers import AutoProcessor
 
 from llava.constants import IGNORE_INDEX, IMAGE_TOKEN_INDEX, DEFAULT_IMAGE_TOKEN
 from torch.utils.data import Dataset
-from llava.train.llava_trainer import LLaVATrainer
+from LLaVA.llava.train.llava_trainer_hf import LLaVATrainer
 
 from llava.model import *
 from PIL import Image
