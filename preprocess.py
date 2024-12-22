@@ -376,7 +376,10 @@ def main():
     
     # Setup directories
     output_dir = "processed_outputs_v2"
+    image_dir = "processed_outputs_images"
+    
     os.makedirs(output_dir, exist_ok=True)
+    os.makedirs(image_dir, exist_ok=True)
     
     # Load dataset
     dataset = load_dataset("ntudlcv/dlcv_2024_final1", split='test', streaming = True)
@@ -398,7 +401,7 @@ def main():
         objects = process_image(image, depth_pipe, obj_model, obj_processor, device) # after DINO and depth anything
         # save coda'd images
         annotated_image = draw_boxes(image.copy(), objects)
-        annotated_image.save(os.path.join(output_dir, f"{image_id}_detected.jpg"))
+        annotated_image.save(os.path.join(image_dir, f"{image_id}_detected.jpg"))
         
         formatted_objects = format_objects(task, objects, image, image_id)
         print(f"\nImage {image_id}:", end=" ")
@@ -407,10 +410,7 @@ def main():
         results[image_id] = formatted_objects
     
     # Save metadata
-    # with open(os.path.join(output_dir, "test_metadata.json"), "w") as f:
-    #     json.dump(results, f, indent=2)
-    #     print("saved?")
-    with open("test_metadata.json", "w") as f:
+    with open(os.path.join(output_dir, "test_metadata.json"), "w") as f:
         json.dump(results, f, indent=2)
         print("saved?")
 
