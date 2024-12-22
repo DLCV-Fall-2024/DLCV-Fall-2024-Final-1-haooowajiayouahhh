@@ -37,6 +37,7 @@ from llava.mm_utils import tokenizer_image_token
 
 from PIL import Image
 
+from prompt_processor import RAGDataHandler, CODAPromptGenerator
 
 local_rank = None
 
@@ -75,7 +76,9 @@ class DataArguments:
     image_folder: Optional[str] = field(default=None)
     image_aspect_ratio: str = 'square'
     task: str =field(default='general',metadata={"help": "Task type, e.g., general, regional, suggestion"})
-
+    rag_path: str = field(default=None,metadata={"help": "Path to the RAG matching results."})
+    train_conversation_file: str = field(default=None,metadata={"help": "Path to the training conversation file."})
+    metadata_file: str = field(default=None,metadata={"help": "Path to the metadata file."})
 
 @dataclass
 class TrainingArguments(transformers.TrainingArguments):
@@ -690,6 +693,13 @@ class HuggingfaceSupervisedDataset(Dataset):
         rank0_print("formatting hf dataset inputs...")
         self.tokenizer = tokenizer
         self.data_args = data_args
+        rag_file = data_args.rag_path
+        train_data_file = data_args.train_conversation_file
+        metadata_file = data_args.metadata_file
+        self.rag_handler = RAGDataHandler(rag_file, train_data_file)
+        self.codaprompt_generator = CODAPromptGenerator(self.rag_handler)
+        with open(metadata_file, 'r') as f:
+            self.metadata = json.load(f)
 
     def __len__(self):
         # return len(self.list_data_dict)
@@ -750,13 +760,14 @@ class HuggingfaceSupervisedDataset(Dataset):
                 image = processor.preprocess(image, return_tensors='pt')['pixel_values'][0]
             else:
                 image = processor.preprocess(image, return_tensors='pt')['pixel_values'][0]
-                
+            
             sources = preprocess_multimodal(
                 copy.deepcopy([e["conversations"] for e in sources]),
                 self.data_args)
         else:
             sources = copy.deepcopy([e["conversations"] for e in sources])
-            
+        
+
         data_dict = preprocess(
             sources,
             self.tokenizer,
@@ -765,12 +776,13 @@ class HuggingfaceSupervisedDataset(Dataset):
         if isinstance(i, int):
             data_dict = dict(input_ids=data_dict["input_ids"][0],
                            labels=data_dict["labels"][0])
-
-        if 'image' in sources:
-            data_dict['image'] = image
-        elif self.data_args.is_multimodal:
-            crop_size = self.data_args.image_processor.crop_size
-            data_dict['image'] = torch.zeros(3, crop_size['height'], crop_size['width'])
+        data_dict['image'] = image
+        print("[Dataset] ismultimodal:",self.data_args.is_multimodal)
+        # if 'image' in sources:
+        #     data_dict['image'] = image
+        # elif self.data_args.is_multimodal:
+        #     crop_size = self.data_args.image_processor.crop_size
+        #     data_dict['image'] = torch.zeros(3, crop_size['height'], crop_size['width'])
             
         return data_dict
 
