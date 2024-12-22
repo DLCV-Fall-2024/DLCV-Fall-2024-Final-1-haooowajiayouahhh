@@ -199,8 +199,12 @@ def main(args):
                     break
             # print(f"matches: {matches}")
             combined_matches[image_id]["relaxed_matches"] = matches
+        else:
+            combined_matches[image_id]["relaxed_matches"] = []
 
     for image_id, presence_vector in regional_vectors.items():
+        combined_matches[image_id] = {}
+        # print(f"presence_vector: {presence_vector}")
         matches = [
             image_id_rag
             for image_id_rag, rag_vec in regional_vectors_for_rag.items()
@@ -208,7 +212,14 @@ def main(args):
         ]
         if len(matches) > args.min_samples:
             matches = random.sample(matches, args.min_samples)
-        combined_matches[image_id] = matches
+        if presence_vector == [0] * len(ordered_objects):
+            # print("I am a zero gay")
+            # print(f"matches: {matches}")
+            combined_matches[image_id]["perfect_matches"] = []
+            combined_matches[image_id]["relaxed_matches"] = matches
+        else:
+            combined_matches[image_id]["perfect_matches"] = matches
+            combined_matches[image_id]["relaxed_matches"] = []
 
     for (image_id, presence_vector), (relaxed_image_id, relaxed_presence_vecotr) in zip(suggestion_vectors.items(), relaxed_suggestion_vectors.items()):
         combined_matches[image_id] = {}
@@ -231,6 +242,8 @@ def main(args):
                 if match_count >= args.min_samples:
                     break
             combined_matches[image_id]["relaxed_matches"] = matches
+        else:
+            combined_matches[image_id]["relaxed_matches"] = []
 
     # print(combined_matches)
     # Write combined matches to a new JSON file
