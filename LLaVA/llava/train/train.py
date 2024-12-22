@@ -74,6 +74,7 @@ class DataArguments:
     is_multimodal: bool = False
     image_folder: Optional[str] = field(default=None)
     image_aspect_ratio: str = 'square'
+    task: str =field(default='general',metadata={"help": "Task type, e.g., general, regional, suggestion"})
 
 
 @dataclass
@@ -659,65 +660,47 @@ class HuggingfaceSupervisedDataset(Dataset):
 
     def __init__(self, data_path: str,
              tokenizer: transformers.PreTrainedTokenizer,
-             data_args: DataArguments):
+             data_args: DataArguments,split='train'):
         super(HuggingfaceSupervisedDataset, self).__init__()
         
         # Load dataset in streaming mode to prevent memory issues
-        self.dataset = load_dataset(data_path)
-        self.train_data = self.dataset['train']
+        self.dataset = load_dataset(data_path,split=split)
+        if split == 'train':
+            split_filter="Train"
+        elif split == 'val':
+            split_filter="Val"
+
+
+        if data_args.task == 'general':
+            self.dataset=self.dataset.filter(lambda example: example["id"].startswith(f"{split_filter}_general"))
+        elif data_args.task == 'regional':
+            self.dataset=self.dataset.filter(lambda example: example["id"].startswith(f"{split_filter}_regional"))
+        elif data_args.task ==  'suggestion':
+            self.dataset=self.dataset.filter(lambda example: example["id"].startswith(f"{split_filter}_suggestion"))
+        # take samples if validation set is too large
+        if split == 'val' and len(self.dataset) > 1000:
+            self.dataset = self.dataset.shuffle(seed=42)
+            self.dataset = self.dataset.select(range(1000))
         max_samples=0
         if max_samples > 0:  # Ensure max_samples is positive
-            self.train_data = self.train_data.select(range(min(max_samples, len(self.train_data))))
+            self.dataset = self.dataset.select(range(min(max_samples, len(self.dataset))))
         # Initialize an empty list for storing processed data
         self.list_data_dict = []
-        
-        # Process data in smaller batches
-        batch_size = 100  # Adjust this based on your memory constraints
-        total_items = len(self.train_data)
 
         rank0_print("formatting hf dataset inputs...")
-        # import gc
-        # gc.collect()
-        # for i in range(0, total_items, batch_size):
-        #     batch = self.train_data.select(range(i, min(i + batch_size, total_items)))
-            
-        #     # Process the batch
-        #     batch_data = [{
-        #         'image': item['image'],
-        #         'conversations': item['conversations']
-        #     } for item in batch]
-            
-        #     # Extend the list with batch data
-        #     self.list_data_dict.extend(batch_data)
-            
-        #     # Optional: Clear memory after each batch
-        #     if i % (batch_size * 2) == 0:
-                
-        #         gc.collect()
-                
-        #     # Update progress
-        #     rank0_print(f"Processed {min(i + batch_size, total_items)}/{total_items} items")
-
         self.tokenizer = tokenizer
         self.data_args = data_args
 
-# # Helper method to process data in batches (optional)
-#     def process_batch(self, batch):
-#         return [{
-#             'image': item['image'],
-#             'conversations': item['conversations']
-#         } for item in batch]
-
     def __len__(self):
         # return len(self.list_data_dict)
-        return len(self.train_data)
+        return len(self.dataset)
 
     @property
     def lengths(self):
         rank0_print("in Lengths...")
         length_list = []
         # for sample in self.list_data_dict:
-        for sample in self.train_data:
+        for sample in self.dataset:
             img_tokens = 128 if 'image' in sample else 0
             length_list.append(sum(len(conv['value'].split()) for conv in sample['conversations']) + img_tokens)
         return length_list
@@ -728,7 +711,7 @@ class HuggingfaceSupervisedDataset(Dataset):
 
     #     length_list = []
     #     # for sample in self.list_data_dict:
-    #     for sample in self.train_data:
+    #     for sample in self.dataset:
     #         cur_len = sum(len(conv['value'].split()) for conv in sample['conversations'])
     #         cur_len = cur_len if 'image' in sample else -cur_len
     #         length_list.append(cur_len)
@@ -736,7 +719,7 @@ class HuggingfaceSupervisedDataset(Dataset):
 
     def __getitem__(self, i) -> Dict[str, torch.Tensor]:
         # sources = self.list_data_dict[i]
-        item=self.train_data[i]
+        item=self.dataset[i]
         # sources=[item]
         # rank0_print("In GetItem:",i)
         if isinstance(i, int):
@@ -790,89 +773,6 @@ class HuggingfaceSupervisedDataset(Dataset):
             data_dict['image'] = torch.zeros(3, crop_size['height'], crop_size['width'])
             
         return data_dict
-# class LazySupervisedDataset(Dataset):
-#     """Dataset for supervised fine-tuning."""
-
-#     def __init__(self, data_path: str,
-#                  tokenizer: transformers.PreTrainedTokenizer,
-#                  data_args: DataArguments):
-#         super(LazySupervisedDataset, self).__init__()
-#         list_data_dict = json.load(open(data_path, "r"))
-
-#         rank0_print("Formatting inputs...Skip in lazy mode")
-#         self.tokenizer = tokenizer
-#         self.list_data_dict = list_data_dict
-#         self.data_args = data_args
-
-#     def __len__(self):
-#         return len(self.list_data_dict)
-
-#     @property
-#     def lengths(self):
-#         length_list = []
-#         for sample in self.list_data_dict:
-#             img_tokens = 128 if 'image' in sample else 0
-#             length_list.append(sum(len(conv['value'].split()) for conv in sample['conversations']) + img_tokens)
-#         return length_list
-
-#     @property
-#     def modality_lengths(self):
-#         length_list = []
-#         for sample in self.list_data_dict:
-#             cur_len = sum(len(conv['value'].split()) for conv in sample['conversations'])
-#             cur_len = cur_len if 'image' in sample else -cur_len
-#             length_list.append(cur_len)
-#         return length_list
-
-#     def __getitem__(self, i) -> Dict[str, torch.Tensor]:
-#         sources = self.list_data_dict[i]
-#         if isinstance(i, int):
-#             sources = [sources]
-#         assert len(sources) == 1, "Don't know why it is wrapped to a list"  # FIXME
-#         if 'image' in sources[0]:
-#             image_file = self.list_data_dict[i]['image']
-#             image_folder = self.data_args.image_folder
-#             processor = self.data_args.image_processor
-#             image = Image.open(os.path.join(image_folder, image_file)).convert('RGB')
-#             if self.data_args.image_aspect_ratio == 'pad':
-#                 def expand2square(pil_img, background_color):
-#                     width, height = pil_img.size
-#                     if width == height:
-#                         return pil_img
-#                     elif width > height:
-#                         result = Image.new(pil_img.mode, (width, width), background_color)
-#                         result.paste(pil_img, (0, (width - height) // 2))
-#                         return result
-#                     else:
-#                         result = Image.new(pil_img.mode, (height, height), background_color)
-#                         result.paste(pil_img, ((height - width) // 2, 0))
-#                         return result
-#                 image = expand2square(image, tuple(int(x*255) for x in processor.image_mean))
-#                 image = processor.preprocess(image, return_tensors='pt')['pixel_values'][0]
-#             else:
-#                 image = processor.preprocess(image, return_tensors='pt')['pixel_values'][0]
-#             sources = preprocess_multimodal(
-#                 copy.deepcopy([e["conversations"] for e in sources]),
-#                 self.data_args)
-#         else:
-#             sources = copy.deepcopy([e["conversations"] for e in sources])
-#         data_dict = preprocess(
-#             sources,
-#             self.tokenizer,
-#             has_image=('image' in self.list_data_dict[i]))
-#         if isinstance(i, int):
-#             data_dict = dict(input_ids=data_dict["input_ids"][0],
-#                              labels=data_dict["labels"][0])
-
-#         # image exist in the data
-#         if 'image' in self.list_data_dict[i]:
-#             data_dict['image'] = image
-#         elif self.data_args.is_multimodal:
-#             # image does not exist in the data, but the model is multimodal
-#             crop_size = self.data_args.image_processor.crop_size
-#             data_dict['image'] = torch.zeros(3, crop_size['height'], crop_size['width'])
-#         return data_dict
-
 
 @dataclass
 class DataCollatorForSupervisedDataset(object):
@@ -907,17 +807,6 @@ class DataCollatorForSupervisedDataset(object):
 
         return batch
 
-
-# def make_supervised_data_module(tokenizer: transformers.PreTrainedTokenizer,
-#                                 data_args) -> Dict:
-#     """Make dataset and collator for supervised fine-tuning."""
-#     train_dataset = LazySupervisedDataset(tokenizer=tokenizer,
-#                                 data_path=data_args.data_path,
-#                                 data_args=data_args)
-#     data_collator = DataCollatorForSupervisedDataset(tokenizer=tokenizer)
-#     return dict(train_dataset=train_dataset,
-#                 eval_dataset=None,
-#                 data_collator=data_collator)
 def make_supervised_data_module(tokenizer: transformers.PreTrainedTokenizer,
                               data_args) -> Dict:
     """Make dataset and collator for supervised fine-tuning."""
@@ -926,8 +815,14 @@ def make_supervised_data_module(tokenizer: transformers.PreTrainedTokenizer,
         train_dataset = HuggingfaceSupervisedDataset(
             tokenizer=tokenizer,
             data_path=data_args.data_path,
-            data_args=data_args
+            data_args=data_args,
+            split='train'
         )
+        val_dataset = HuggingfaceSupervisedDataset(
+            tokenizer=tokenizer,
+            data_path=data_args.data_path,
+            data_args=data_args,
+            split='val')
     else:
         train_dataset = LazySupervisedDataset(
             tokenizer=tokenizer,
@@ -937,7 +832,7 @@ def make_supervised_data_module(tokenizer: transformers.PreTrainedTokenizer,
         
     data_collator = DataCollatorForSupervisedDataset(tokenizer=tokenizer)
     return dict(train_dataset=train_dataset,
-                eval_dataset=None,
+                eval_dataset=val_dataset,
                 data_collator=data_collator)
 
 def train(attn_implementation=None):
