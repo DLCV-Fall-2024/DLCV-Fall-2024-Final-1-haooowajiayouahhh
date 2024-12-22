@@ -142,7 +142,7 @@ class CODAPromptGenerator:
         self.rag_handler = rag_handler
         self.prompt_builder = PromptBuilder()
         
-    def generate_prompt(self, image_id: str, question: str, metadata: dict) -> str:
+    def generate_prompt(self, image_id: str, metadata: dict) -> str:
         """Generate complete prompt for a given task"""
         task_type = image_id.split('_')[1]
         
@@ -201,21 +201,15 @@ def main():
         count = 0
         
         for sample in dataset:
-            if count >= 5:  # Test 2 examples per task
+            if count >= 10:  # Test 2 examples per task
                 break
                 
             image_id = sample['id']
             if image_id.split('_')[1] != task_type:
                 continue
                 
-            # Get question from conversations
-            question = next((msg['value'] for msg in sample['conversations'] 
-                           if msg['from'] == 'human'), None)
-            if not question:
-                continue
-                
             # Generate prompt
-            prompt = generator.generate_prompt(image_id, question, metadata)
+            prompt = generator.generate_prompt(image_id, metadata)
             
             print(f"Image ID: {image_id}")
             print("-" * 50)
@@ -227,3 +221,19 @@ def main():
 
 if __name__ == "__main__":
     main()
+    # usage for training (i guess)
+    rag_file = "processed_outputs_v2/train_match_results.json"
+    train_data_file = "storage/conversations.json"
+    metadata_file = "processed_outputs_v2/cleaned_train_metadata.json"
+    
+    # Load data
+    with open(metadata_file, 'r') as f:
+        metadata = json.load(f)
+    
+    # Initialize handlers
+    rag_handler = RAGDataHandler(rag_file, train_data_file)
+    generator = CODAPromptGenerator(rag_handler)
+    
+    
+    
+    

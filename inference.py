@@ -58,17 +58,10 @@ def main():
         for item in tqdm(dataset):
             image = item['image']
             image_id = item['id']
-            
-            # Get original question from conversations
-            question = next((msg['value'] for msg in item['conversations'] 
-                           if msg['from'] == 'human'), None)
-            if not question:
-                continue
                 
             # Generate prompt using prompt processor
             prompt = prompt_generator.generate_prompt(
                 image_id=image_id,
-                question=question,
                 metadata=metadata
             )
             # print(prompt)
