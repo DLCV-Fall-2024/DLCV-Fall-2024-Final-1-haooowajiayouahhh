@@ -36,7 +36,8 @@ from llava.model import *
 from llava.mm_utils import tokenizer_image_token
 
 from PIL import Image
-
+import sys
+sys.path.append("../")
 from prompt_processor import RAGDataHandler, CODAPromptGenerator
 
 local_rank = None
@@ -767,11 +768,24 @@ class HuggingfaceSupervisedDataset(Dataset):
         else:
             sources = copy.deepcopy([e["conversations"] for e in sources])
         
-
+        image_id=item['image_id']
+        # rank0_print("Image ID:",image_id)
+        prompt = self.codaprompt_generator.generate_prompt(
+                image_id=image_id,
+                metadata=self.metadata
+        )
+        for source in sources:
+            for sentence in source:
+                if sentence['from'] == 'human':
+                    sentence['value'] = prompt 
+        
+        print("[Dataset] imageid: ", image_id)
+        print("[Dataset] sources: ",sources) 
+        
         data_dict = preprocess(
             sources,
             self.tokenizer,
-            has_image=('image' in sources))
+            has_image=True)
             
         if isinstance(i, int):
             data_dict = dict(input_ids=data_dict["input_ids"][0],
@@ -848,6 +862,7 @@ def make_supervised_data_module(tokenizer: transformers.PreTrainedTokenizer,
                 data_collator=data_collator)
 
 def train(attn_implementation=None):
+    torch.cuda.empty_cache()
     global local_rank
 
     parser = transformers.HfArgumentParser(
@@ -979,7 +994,7 @@ def train(attn_implementation=None):
         vision_tower.to(dtype=torch.bfloat16 if training_args.bf16 else torch.float16, device=training_args.device)
 
         data_args.image_processor = vision_tower.image_processor
-        data_args.is_multimodal = True
+        data_args.is_multimodal = False
 
         model.config.image_aspect_ratio = data_args.image_aspect_ratio
         model.config.tokenizer_padding_side = tokenizer.padding_side
