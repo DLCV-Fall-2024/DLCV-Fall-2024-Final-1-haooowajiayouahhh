@@ -220,7 +220,8 @@ def main():
             count += 1
 
 if __name__ == "__main__":
-    main()
+    # main()
+    
     # usage for training (i guess)
     rag_file = "processed_outputs_v2/train_match_results.json"
     train_data_file = "storage/conversations.json"
@@ -234,6 +235,12 @@ if __name__ == "__main__":
     rag_handler = RAGDataHandler(rag_file, train_data_file)
     generator = CODAPromptGenerator(rag_handler)
     
-    
+    dataset = load_dataset("ntudlcv/dlcv_2024_final1", split="train", streaming=True)
+    for sample in dataset:
+            
+        image_id = sample['id']
+            
+        # Generate prompt
+        prompt = generator.generate_prompt(image_id, metadata)
     
     
