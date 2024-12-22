@@ -168,7 +168,7 @@ def main(args):
     )
     
     general_vectors, regional_vectors, suggestion_vectors, relaxed_general_vectors, relaxed_suggestion_vectors, ordered_objects = create_presence_vectors(
-        'processed_outputs_v2/cleaned_test_metadata.json', 
+        'processed_outputs_v2/cleaned_train_metadata.json', 
         coda_categories
     )
     
@@ -176,78 +176,68 @@ def main(args):
     combined_matches = {}
 
     # Process matches for general, regional, and suggestion tasks
-    for (image_id, presence_vector), (relaxed_image_id, relaxed_presence_vecotr) in zip(general_vectors.items(), relaxed_general_vectors.items()):
+    for (image_id, presence_vector), (relaxed_image_id, relaxed_presence_vector) in zip(general_vectors.items(), relaxed_general_vectors.items()):
         combined_matches[image_id] = {}
 
-        matches = [
+        # Get perfect matches
+        perfect_matches = [
             image_id_rag
             for image_id_rag, rag_vec in general_vectors_for_rag.items()
             if rag_vec == presence_vector and image_id != image_id_rag
         ]
-        if len(matches) > args.min_samples:
-            matches = random.sample(matches, args.min_samples)
-        combined_matches[image_id]["perfect_matches"] = matches
-        match_count = len(matches)
+        if len(perfect_matches) > args.min_samples:
+            perfect_matches = random.sample(perfect_matches, args.min_samples)
+        combined_matches[image_id]["perfect_matches"] = perfect_matches
+        
+        match_count = len(perfect_matches)
         if match_count < args.min_samples:
-            matches = []
-            # print(f"empty_general_id: {image_id}")
+            relaxed_matches = []
             for image_id_rag, rag_vec in relaxed_general_vectors_for_rag.items():
-                if rag_vec == relaxed_presence_vecotr and image_id != image_id_rag:
-                    matches.append(image_id_rag)
+                # Check if this image ID is not already in perfect matches
+                if (rag_vec == relaxed_presence_vector and 
+                    image_id != image_id_rag and 
+                    image_id_rag not in perfect_matches):
+                    relaxed_matches.append(image_id_rag)
                     match_count += 1
                 if match_count >= args.min_samples:
                     break
-            # print(f"matches: {matches}")
-            combined_matches[image_id]["relaxed_matches"] = matches
+            combined_matches[image_id]["relaxed_matches"] = relaxed_matches
         else:
             combined_matches[image_id]["relaxed_matches"] = []
 
-    for image_id, presence_vector in regional_vectors.items():
+    # For suggestion vectors section:
+    for (image_id, presence_vector), (relaxed_image_id, relaxed_presence_vector) in zip(suggestion_vectors.items(), relaxed_suggestion_vectors.items()):
         combined_matches[image_id] = {}
-        # print(f"presence_vector: {presence_vector}")
-        matches = [
-            image_id_rag
-            for image_id_rag, rag_vec in regional_vectors_for_rag.items()
-            if rag_vec == presence_vector and image_id != image_id_rag
-        ]
-        if len(matches) > args.min_samples:
-            matches = random.sample(matches, args.min_samples)
-        if presence_vector == [0] * len(ordered_objects):
-            # print("I am a zero gay")
-            # print(f"matches: {matches}")
-            combined_matches[image_id]["perfect_matches"] = []
-            combined_matches[image_id]["relaxed_matches"] = matches
-        else:
-            combined_matches[image_id]["perfect_matches"] = matches
-            combined_matches[image_id]["relaxed_matches"] = []
-
-    for (image_id, presence_vector), (relaxed_image_id, relaxed_presence_vecotr) in zip(suggestion_vectors.items(), relaxed_suggestion_vectors.items()):
-        combined_matches[image_id] = {}
-        matches = [
+        
+        # Get perfect matches
+        perfect_matches = [
             image_id_rag
             for image_id_rag, rag_vec in suggestion_vectors_for_rag.items()
             if rag_vec == presence_vector and image_id != image_id_rag
         ]
-        if len(matches) > args.min_samples:
-            matches = random.sample(matches, args.min_samples)
-        combined_matches[image_id]["perfect_matches"] = matches
-        match_count = len(matches)
+        if len(perfect_matches) > args.min_samples:
+            perfect_matches = random.sample(perfect_matches, args.min_samples)
+        combined_matches[image_id]["perfect_matches"] = perfect_matches
+        
+        match_count = len(perfect_matches)
         if match_count < args.min_samples:
-            # print(f"empty_index: {image_id}")
-            matches = []
+            relaxed_matches = []
             for image_id_rag, rag_vec in relaxed_suggestion_vectors_for_rag.items():
-                if rag_vec == relaxed_presence_vecotr and image_id != image_id_rag:
-                    matches.append(image_id_rag)
+                # Check if this image ID is not already in perfect matches
+                if (rag_vec == relaxed_presence_vector and 
+                    image_id != image_id_rag and 
+                    image_id_rag not in perfect_matches):
+                    relaxed_matches.append(image_id_rag)
                     match_count += 1
                 if match_count >= args.min_samples:
                     break
-            combined_matches[image_id]["relaxed_matches"] = matches
+            combined_matches[image_id]["relaxed_matches"] = relaxed_matches
         else:
             combined_matches[image_id]["relaxed_matches"] = []
 
     # print(combined_matches)
     # Write combined matches to a new JSON file
-    output_file = 'processed_outputs_v2/match_results.json'
+    output_file = 'processed_outputs_v2/train_match_results.json'
     with open(output_file, 'w') as f:
         json.dump(combined_matches, f, indent=4)
     
