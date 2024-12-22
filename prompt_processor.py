@@ -63,11 +63,11 @@ class PromptBuilder:
     }
     
     EXAMPLE_DESCRIPTIONS = {
-        "general": """These are similar driving scenarios as references. Follow their format and writing style, but analyze the current image independently:""",
+        "general": """Below are reference examples. Use their exact format and detail level when analyzing the current scene:""",
         
-        "regional": """These are similar examples of describing marked objects. Follow their format and writing style, but focus on the current object:""",
+        "regional": """Below are reference examples. Follow their exact format when describing the marked object:""",
         
-        "suggestion": """These are similar driving scenarios as references. Follow their format and writing style for suggestions, but focus on the current scene:"""
+        "suggestion": """Below are reference examples. Match their exact format when providing driving suggestions:"""
     }
     
     @staticmethod
@@ -167,13 +167,15 @@ class CODAPromptGenerator:
             objects_section = "The following objects have been detected (verify these in the image):\n" + \
                             self.prompt_builder.format_detected_objects(image_metadata, task_type)
         
+        last_description = "Use the exact same format and style as the examples above, but analyze objects in the current image independently. You may use detected objects as reference if given."
         # Combine all components
         prompt_parts = [
             task_description,
             example_description,
             formatted_examples,
             "END OF EXAMPLES",
-            objects_section
+            objects_section,
+            last_description
         ]
         
         return "\n\n".join(prompt_parts)
@@ -201,7 +203,7 @@ def main():
         count = 0
         
         for sample in dataset:
-            if count >= 10:  # Test 2 examples per task
+            if count >= 1:  # Test 2 examples per task
                 break
                 
             image_id = sample['id']
@@ -220,8 +222,8 @@ def main():
             count += 1
 
 if __name__ == "__main__":
-    # main()
-    
+    main()
+    '''
     # usage for training (i guess)
     rag_file = "processed_outputs_v2/train_match_results.json"
     train_data_file = "storage/conversations.json"
@@ -242,5 +244,6 @@ if __name__ == "__main__":
             
         # Generate prompt
         prompt = generator.generate_prompt(image_id, metadata)
+        print(prompt)'''
     
     
