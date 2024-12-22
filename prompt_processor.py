@@ -1,218 +1,229 @@
-import json
+from dataclasses import dataclass
+from typing import Dict, List, Optional, Tuple
 from datasets import load_dataset
+from pathlib import Path
+import json
 
-def get_format_objects(image_id, metadata):
-    # Read metadata JSON
-    # with open(metadata_path, 'r') as f:
-    #     metadata = json.load(f)
-    
-    # # Get task type from image_id
-    task_type = image_id.split('_')[1]  # general, regional, or suggestion
-    assert task_type in ["general", "regional", "suggestion"], "Invalid task type"
-    assert image_id.split('_')[1] == task_type, "Mismatched task type"
-    # Get objects for this image
-    objects = metadata.get(image_id, [])
-    empty_message = "No objects are pre-detected in this image. Please analyze the image carefully and identify the relevant objects yourself."
+@dataclass
+class DetectedObject:
+    """Class representing a detected object in an image"""
+    label: str
+    depth_category: str  # 'immediate', 'short range', 'mid range', 'long range'
+    position: str  # Position description in image
 
-    # Different descriptions for each task type
-    if task_type == "general":
-        if not objects:
-            return empty_message
-        description = """Here are some objects pre-detected in the image. Use this only as a reference and verify for yourself in the image - check the colors, orientations, and other details as shown in the example prompts above."""
+class RAGDataHandler:
+    """Handler for RAG data loading and example retrieval"""
+    def __init__(self, rag_file_path: str, train_data_path: str):
+        self.rag_mapping = self._load_json(rag_file_path)
+        self.train_data = self._load_json(train_data_path)
         
-    elif task_type == "suggestion":
-        if not objects:
-            return "No objects detected. Please analyze the scene and provide general driving recommendations appropriate for this environment and situation."
-    
-        description = """Here are the key objects detected in the scene. Based on these and the overall driving environment, provide appropriate driving suggestions covering:
-- General speed and following distance recommendations
-- Basic safety precautions for this type of road/area
-- Relevant traffic rules and regulations
-- Common driving practices for this scenario"""
-    
-    # Filter objects - keep only immediate and short range
-        if isinstance(objects, dict):
-            for category in objects:
-                objects[category] = [obj for obj in objects[category] 
-                                if obj['depth_category'] in ['immediate', 'short range']]
+    def _load_json(self, file_path: str) -> dict:
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception as e:
+            print(f"Error loading {file_path}: {e}")
+            return {}
             
-            # If after filtering, no immediate/short range objects remain
-            if not any(objects.values()):
-                return "While no immediate objects are detected, please provide general driving recommendations appropriate for this road environment and situation."
-                
-    elif task_type == "regional":
-        if not objects:
-            return "No object is detected in the specified region. Please analyze the region marked by the red rectangle and describe what you see."
-        description = """Here is the object detected in the specified region. Please verify this detection and provide a detailed description of the object's appearance and its potential impact on driving behavior."""
-        obj = objects[0]
-        return f"{description}\n{chr(10)}A {obj['label']} is detected at {obj['depth_category']} in the {obj['position']} of the image."
-
-    # Format objects for general and suggestion tasks
-    if task_type in ["general", "suggestion"]:
-        formatted_text = [description]  # Start with the task-specific description
-        
-        object_lines = []  # Store object lines
-        for category in ['vehicles', 'vulnerable_road_users', 'traffic_signs', 
-                        'traffic_lights', 'traffic_cones', 'barriers', 'other_objects']:
-            items = objects.get(category, [])
-            if items:
-                object_groups = {}
-                for item in items:
-                    key = (item['label'], item['depth_category'], item['position'])
-                    object_groups[key] = object_groups.get(key, 0) + 1
-                
-                category_texts = []
-                for (label, depth, position), count in object_groups.items():
-                    count_text = f"{count} " if count > 1 else "a "
-                    plural = "s" if count > 1 else ""
-                    category_texts.append(f"{count_text}{label}{plural} at {depth} in the {position} of the image.")
-                
-                if category_texts:
-                    object_lines.append(f"{category.replace('_', ' ').title()}: {', '.join(category_texts)}")
-        
-        # Join description and objects with single newline
-        if object_lines:
-            return f"{description}\n{chr(10).join(object_lines)}"
-        return empty_message
-
-    return "Invalid task type"
-
-class PromptProcessor:
-    def __init__(self, convdata, rag_results, metadata_path):
+    def get_similar_examples(self, test_id: str, num_examples: int = 2) -> List[Tuple[str, str, str]]:
         """
-        convdata: conversations, e.g. gt convos
-        rag_results: rag results of train or test sets
-        metadata_path: processed outputs path
-        
+        Get examples for a test image, prioritizing perfect matches
+        Returns list of tuples: (match_type, train_id, example_text)
         """
-        self.convdata = convdata
-        self.rag_results = rag_results
-        self.metadata_path = metadata_path
+        matches = self.rag_mapping.get(test_id, {})
+        examples = []
+        
+        # Get perfect matches first
+        perfect_matches = matches.get('perfect_matches', [])
+        for train_id in perfect_matches:
+            if train_id in self.train_data and len(examples) < num_examples:
+                examples.append(('Perfect match', train_id, self.train_data[train_id]))
+                
+        # If we have enough perfect matches, return them
+        if len(examples) == num_examples:
+            return examples
+            
+        # Otherwise, use relaxed matches to fill remaining slots
+        relaxed_matches = matches.get('relaxed_matches', [])
+        for train_id in relaxed_matches:
+            if train_id in self.train_data and len(examples) < num_examples:
+                examples.append(('Relaxed match', train_id, self.train_data[train_id]))
+                
+        return examples
+
+class PromptBuilder:
+    """Class for building task-specific prompts"""
     
-    def get_prompts(self, image_id, question_message, baseOn, num_examples=2):
-        # Task description
-        prompt_task_description = question_message.strip()
+    TASK_DESCRIPTIONS = {
+        "general": """There is an image of traffic captured from the perspective of the ego car. Focus on objects influencing the ego car's driving behavior: vehicles (cars, trucks, buses, etc.), vulnerable road users (pedestrians, cyclists, motorcyclists), traffic signs (no parking, warning, directional, etc.), traffic lights (red, green, yellow), traffic cones, barriers, miscellaneous(debris, dustbin, animals, etc.). You must not discuss any objects beyond the seven categories above. Please describe each object's appearance, position, direction, and explain why it affects the ego car's behavior.""",
         
-        # Check if this is a regional task
-        task_type = image_id.split('_')[1]
+        "regional": """Please describe the object inside the red rectangle in the image and explain why it affect ego car driving.""",
+        
+        "suggestion": """There is an image of traffic captured from the perspective of the ego car. Focus on objects influencing the ego car's driving behavior: vehicles (cars, trucks, buses, etc.), vulnerable road users (pedestrians, cyclists, motorcyclists), traffic signs (no parking, warning, directional, etc.), traffic lights (red, green, yellow), traffic cones, barriers, miscellaneous(debris, dustbin, animals, etc.). You must not discuss any objects beyond the seven categories above. Please provide driving suggestions for the ego car based on the current scene."""
+    }
+    
+    EXAMPLE_DESCRIPTIONS = {
+        "general": """These are similar driving scenarios as references. Follow their format and writing style, but analyze the current image independently:""",
+        
+        "regional": """These are similar examples of describing marked objects. Follow their format and writing style, but focus on the current object:""",
+        
+        "suggestion": """These are similar driving scenarios as references. Follow their format and writing style for suggestions, but focus on the current scene:"""
+    }
+    
+    @staticmethod
+    def format_object_count(count: int, label: str) -> str:
+        """Format object count and label"""
+        if count == 1:
+            return f"a {label}"
+        return f"some {label}s"
+
+    @staticmethod
+    def get_position_text(position: str) -> str:
+        """Convert numeric position (0-8) to directional text
+        0,3,6 -> left
+        1,4,7 -> front (use 'in')
+        2,5,8 -> right
+        """
+        try:
+            pos_num = int(position)
+            if pos_num in [0, 3, 6]:
+                return 'on the left'
+            elif pos_num in [1, 4, 7]:
+                return 'in front'
+            elif pos_num in [2, 5, 8]:
+                return 'on the right'
+            return 'in front'  # default
+        except ValueError:
+            return 'in front'  # default if position is not a number
+        
+    @staticmethod
+    def format_detected_objects(metadata: dict, task_type: str) -> str:
+        """Format detected objects based on task type"""
+        if not metadata:
+            return "No objects detected. Please analyze the image carefully."
+            
         if task_type == "regional":
-            # For regional tasks, only include task description, object info and final instruction
-            prompt_objects = get_format_objects(image_id, self.metadata_path)
-            prompt_generate = """Based on the provided image and detected objects in the red rectangle, give a valid description of the object and its impact on driving behavior."""
+            obj = metadata[0] if metadata else None
+            if not obj:
+                return "No object detected in the marked region. Please analyze the region carefully."
+            position = PromptBuilder.get_position_text(obj['position'])
+            return f"- {PromptBuilder.format_object_count(1, obj['label'])} {position}"
             
-            final_prompt = (
-                f"{prompt_task_description}\n\n"
-                f"{prompt_objects}\n\n"
-                f"{prompt_generate}"
-            )
-            
-            return final_prompt
+        # For general and suggestion tasks
+        categories = [
+            'vehicles', 'vulnerable_road_users', 'traffic_signs',
+            'traffic_lights', 'traffic_cones', 'barriers', 'other_objects'
+        ]
         
-        # For non-regional tasks, continue with original logic including examples
-        prompt_study_examples = """Below are example prompts that demonstrate the expected FORMAT for your response. You should:
-- Copy the writing style and structure
-- Follow how objects and their impacts are described
-- Match the level of detail and organization
-These examples come from similar driving scenarios but may contain different objects and situations that you should not assume are present in the current image."""
-        
-        prompt_examples = ""
-        example_image_ids = self.rag_results[image_id]
-        for i, idx in enumerate(example_image_ids[baseOn][:num_examples], 1):
-            conv = self.convdata[idx].strip()
-            prompt_examples += f"\nExample {i}:\n{conv}\n"
+        sections = []
+        for category in categories:
+            if category in metadata and metadata[category]:
+                objects = metadata[category]
+                # Group objects by label and position
+                grouped = {}
+                for obj in objects:
+                    position = PromptBuilder.get_position_text(obj['position'])
+                    key = (obj['label'], position)
+                    grouped[key] = grouped.get(key, 0) + 1
+                
+                if grouped:
+                    items = []
+                    for (label, position), count in grouped.items():
+                        items.append(f"- {PromptBuilder.format_object_count(count, label)} {position}")
+                    if items:
+                        section = f"{category.replace('_', ' ').title()}:\n" + "\n".join(items)
+                        sections.append(section)
+                    
+        return "\n\n".join(sections) if sections else "No relevant objects detected. Please analyze the image carefully."
 
-        prompt_generate = """Based on the provided image and detected objects, give a valid description according to the task."""
+class CODAPromptGenerator:
+    """Main class for generating CODA challenge prompts"""
+    def __init__(self, rag_handler: RAGDataHandler):
+        self.rag_handler = rag_handler
+        self.prompt_builder = PromptBuilder()
         
-        prompt_objects = get_format_objects(image_id, self.metadata_path)
+    def generate_prompt(self, image_id: str, question: str, metadata: dict) -> str:
+        """Generate complete prompt for a given task"""
+        task_type = image_id.split('_')[1]
         
-        final_prompt = (
-            f"{prompt_task_description}\n\n"
-            f"{prompt_study_examples}\n"
-            f"{prompt_examples}\n"
-            "END OF EXAMPLES\n\n"
-            f"{prompt_objects}\n\n"
-            f"{prompt_generate}"
-        )
-
-        return final_prompt
-    
-def get_human_message(conversations):
-    """Extract the human message value from conversations"""
-    for message in conversations:
-        if message["from"] == "human":
-            return message["value"]
-    return None
+        # Get task-specific components
+        task_description = self.prompt_builder.TASK_DESCRIPTIONS[task_type]
+        example_description = self.prompt_builder.EXAMPLE_DESCRIPTIONS[task_type]
+        
+        # Get examples with match type
+        examples = self.rag_handler.get_similar_examples(image_id)
+        formatted_examples = "\n\n".join([
+            f"Example {i+1}:\n{example}" 
+            for i, (match_type, _, example) in enumerate(examples)
+        ])
+        
+        # Check if metadata exists for this image
+        image_metadata = metadata.get(image_id, {})
+        
+        # Format detected objects with new formatting style
+        if not image_metadata:
+            objects_section = "Note: No objects pre-detected. The above examples are only for format reference. Please analyze the image carefully."
+        else:
+            objects_section = "The following objects have been detected (verify these in the image):\n" + \
+                            self.prompt_builder.format_detected_objects(image_metadata, task_type)
+        
+        # Combine all components
+        prompt_parts = [
+            task_description,
+            example_description,
+            formatted_examples,
+            "END OF EXAMPLES",
+            objects_section
+        ]
+        
+        return "\n\n".join(prompt_parts)
 
 def main():
-    # Specify your paths and configurations here
-    rag_path = "storage/rag_test.json"
-    metadata_path = "processed_outputs/test_metadata.json"
-    conversation_path = "storage/conversations.json"
-    num_examples = 5
-
-    # Load test dataset without streaming
-    test_dataset = load_dataset("ntudlcv/dlcv_2024_final1", split="test", streaming = True)
-    print("Successfully loaded test dataset")
-
-    # Load RAG results
-    with open(rag_path, 'r') as f:
-        rag_results = json.load(f)
-    print("Successfully loaded RAG results")
-
-    # Load metadata
-    with open(metadata_path, 'r') as f:
+    # Initialize paths
+    rag_file = "processed_outputs_v2/match_results.json"
+    train_data_file = "storage/conversations.json"
+    metadata_file = "processed_outputs_v2/cleaned_test_metadata.json"
+    
+    # Load data
+    with open(metadata_file, 'r') as f:
         metadata = json.load(f)
-    print("Successfully loaded metadata")
-
-    # Load conversations
-    with open(conversation_path, 'r') as f:
-        conversations = json.load(f)
-    print("Successfully loaded conversations")
-
-    # Initialize prompt processor
-    processor = PromptProcessor(
-        convdata=conversations,
-        rag_results=rag_results,
-        metadata_path=metadata
-    )
-
-    # Test for each task type
-    task_types = ["general", "regional", "suggestion"]
-    for task_type in task_types:
-        print(f"\n=== Testing {task_type} perception task ===\n")
-        
+    
+    # Initialize handlers
+    rag_handler = RAGDataHandler(rag_file, train_data_file)
+    generator = CODAPromptGenerator(rag_handler)
+    
+    # Load test dataset
+    dataset = load_dataset("ntudlcv/dlcv_2024_final1", split="test", streaming=True)
+    
+    # Test each task type
+    for task_type in ['general', 'regional', 'suggestion']:
+        print(f"\n=== Testing {task_type} task ===\n")
         count = 0
-        for sample in test_dataset:
-            image_id = sample['id']
-            if image_id.split('_')[1] == task_type and count < num_examples:
-                try:
-                    # Get just the human message value
-                    question_message = get_human_message(sample['conversations'])
-                    if question_message is None:
-                        raise ValueError(f"No human message found in conversations for {image_id}")
-                    
-                    # Generate prompt
-                    prompt = processor.get_prompts(
-                        image_id=image_id,
-                        question_message=question_message,
-                        baseOn='vit_similar_images'
-                    )
-                    
-                    # Print output
-                    print(f"Image ID: {image_id}")
-                    print("Generated Prompt:")
-                    print("-" * 50)
-                    print(prompt)
-                    print("-" * 50)
-                    print("\n")
-                    
-                    count += 1
-                except Exception as e:
-                    print(f"Error processing {image_id}: {e}\n")
-                    print(f"Sample conversations: {sample['conversations']}")
-            
-            if count >= num_examples:
+        
+        for sample in dataset:
+            if count >= 5:  # Test 2 examples per task
                 break
+                
+            image_id = sample['id']
+            if image_id.split('_')[1] != task_type:
+                continue
+                
+            # Get question from conversations
+            question = next((msg['value'] for msg in sample['conversations'] 
+                           if msg['from'] == 'human'), None)
+            if not question:
+                continue
+                
+            # Generate prompt
+            prompt = generator.generate_prompt(image_id, question, metadata)
+            
+            print(f"Image ID: {image_id}")
+            print("-" * 50)
+            print(prompt)
+            print("-" * 50)
+            print()
+            
+            count += 1
 
 if __name__ == "__main__":
     main()
