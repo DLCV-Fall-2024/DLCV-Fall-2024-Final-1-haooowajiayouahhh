@@ -5,7 +5,7 @@ from tqdm import tqdm
 from typing import List, Dict
 from datasets import load_dataset
 import transformers
-from prompt_processor import RAGDataHandler, CODAPromptGenerator
+from prompt_processor import RAGDataHandler, CODAPromptGenerator, RefinedPromptGenerator
 
 def load_model_and_processor(base_model_id, ckpt_path: str):
     """Load LLaVA model and processor"""
@@ -30,11 +30,13 @@ def clean_response(response: str) -> str:
 def main():
     # Configurations
     base_model_id = "llava-hf/llava-1.5-7b-hf"
-    ckpt_path = './checkpoints/llava-v1.5-7b-task-lora-general-hf'  # model name or path to your model
+    # ckpt_path = './checkpoints/llava-v1.5-7b-task-lora-exp1-hf'
+    ckpt_path = base_model_id  # model name or path to your model
     rag_file = "processed_outputs_v2/match_results.json"
     train_data = "storage/conversations.json"
     metadata_file = "processed_outputs_v2/cleaned_test_metadata.json"
     output_file = "submission.json"
+    unrefined_input_path = "submission.json"
     
     print("Loading model and processor...")
     model, processor = load_model_and_processor(base_model_id, ckpt_path)
@@ -47,11 +49,11 @@ def main():
     
     print("Initializing prompt generator...")
     rag_handler = RAGDataHandler(rag_file, train_data)
-    prompt_generator = CODAPromptGenerator(rag_handler)
+    prompt_generator = RefinedPromptGenerator(rag_handler, unrefined_input_path)
     
     print("Loading test dataset...")
     dataset = load_dataset("ntudlcv/dlcv_2024_final1", split="test", streaming = True)
-    dataset = dataset.take(7)
+    
     predictions = {}
     print("Starting inference...")
     
@@ -64,7 +66,7 @@ def main():
             # Generate prompt using prompt processor
             prompt = prompt_generator.generate_prompt(
                 image_id=image_id,
-                metadata=metadata
+                metadata=metadata,
             )
             # print(prompt)
             # Format conversation for LLaVA

@@ -232,7 +232,7 @@ def main():
         default="llava-hf/llava-1.5-7b-hf",
     )
     parser.add_argument(
-        "--old_model_ckpt_path",
+        "--old_model_ckpt_path", ##name must included lora!!!
         required=True
     )
     parser.add_argument(

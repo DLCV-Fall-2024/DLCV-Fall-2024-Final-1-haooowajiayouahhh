@@ -178,6 +178,38 @@ class CODAPromptGenerator:
         
         return "\n\n".join(prompt_parts)
 
+class RefinedPromptGenerator:
+    def __init__(self, rag_handler: RAGDataHandler, input_path):
+        self.rag_handler = rag_handler
+        with open(input_path, 'r', encoding='utf-8') as f:
+            self.unrefined_input = json.load(f)
+        self.prompt_builder = PromptBuilder() 
+    def generate_prompt(self, image_id, metadata) -> str:
+        """Generate complete prompt for a given task"""
+        task_type = image_id.split('_')[1]
+        
+        # Get task-specific components
+        task_description = "Refine the description given below by imitate the style, senctence pattern and word choice that the examples showed, only refine the style, in the same time, make the meaning of the content unchanged."
+        Description ="\n\n"+"Description:\n"+self.unrefined_input[image_id]
+        
+        # Get examples with match type
+        examples = self.rag_handler.get_similar_examples(image_id)
+        formatted_examples = "\n\n".join([
+            f"Example {i+1}:\n{example}" 
+            for i, (match_type, _, example) in enumerate(examples)
+        ])
+        
+        
+        prompt_parts = [
+            task_description,
+            Description,
+            formatted_examples,
+            "END OF EXAMPLES",
+        ]
+        
+        return "\n\n".join(prompt_parts)
+
+
 def main():
     # Initialize paths
     rag_file = "processed_outputs_v2/match_results.json"
