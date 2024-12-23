@@ -659,6 +659,52 @@ def preprocess(
 
     return dict(input_ids=input_ids, labels=targets)
 
+def print_tunable_parameters_to_file(model, output_file):
+    """Print all tunable parameters and their shapes to a file."""
+    with open(output_file, 'w') as f:
+        def write_dict(d, prefix='', depth=0):
+            total_params = 0
+            indent = '  ' * depth
+            
+            for key, value in d.items():
+                if isinstance(value, dict):
+                    if 'shape' in value:  # Leaf node
+                        f.write(f"{indent}{prefix}{key}: {value['shape']} ({value['params']:,} params)\n")
+                        total_params += value['params']
+                    else:  # Internal node
+                        f.write(f"{indent}{prefix}{key}:\n")
+                        params = write_dict(value, prefix, depth + 1)
+                        total_params += params
+            return total_params
+
+        tunable = {}
+        frozen = {}
+        
+        for name, param in model.named_parameters():
+            num_params = param.numel()
+            
+            parts = name.split('.')
+            current_dict = tunable if param.requires_grad else frozen
+            
+            for i, part in enumerate(parts[:-1]):
+                if part not in current_dict:
+                    current_dict[part] = {}
+                current_dict = current_dict[part]
+                
+            current_dict[parts[-1]] = {
+                'shape': tuple(param.shape),
+                'params': num_params
+            }
+
+        f.write("=== Tunable Parameters ===\n")
+        tunable_params = write_dict(tunable)
+        
+        # f.write("\n=== Frozen Parameters ===\n")
+        # frozen_params = write_dict(frozen)
+
+    
+    return tunable, frozen
+
 class HuggingfaceSupervisedDataset(Dataset):
     """Dataset for supervised fine-tuning using Huggingface datasets."""
 
@@ -689,6 +735,7 @@ class HuggingfaceSupervisedDataset(Dataset):
         if max_samples > 0:  # Ensure max_samples is positive
             self.dataset = self.dataset.select(range(min(max_samples, len(self.dataset))))
         # Initialize an empty list for storing processed data
+
         self.list_data_dict = []
 
         rank0_print("formatting hf dataset inputs...")
@@ -768,7 +815,7 @@ class HuggingfaceSupervisedDataset(Dataset):
         else:
             sources = copy.deepcopy([e["conversations"] for e in sources])
         
-        image_id=item['image_id']
+        image_id=item['id']
         # rank0_print("Image ID:",image_id)
         prompt = self.codaprompt_generator.generate_prompt(
                 image_id=image_id,
@@ -779,8 +826,8 @@ class HuggingfaceSupervisedDataset(Dataset):
                 if sentence['from'] == 'human':
                     sentence['value'] = prompt 
         
-        print("[Dataset] imageid: ", image_id)
-        print("[Dataset] sources: ",sources) 
+        # print("[Dataset] imageid: ", image_id)
+        # print("[Dataset] sources: ",sources) 
         
         data_dict = preprocess(
             sources,
@@ -791,7 +838,7 @@ class HuggingfaceSupervisedDataset(Dataset):
             data_dict = dict(input_ids=data_dict["input_ids"][0],
                            labels=data_dict["labels"][0])
         data_dict['image'] = image
-        print("[Dataset] ismultimodal:",self.data_args.is_multimodal)
+        # print("[Dataset] ismultimodal:",self.data_args.is_multimodal)
         # if 'image' in sources:
         #     data_dict['image'] = image
         # elif self.data_args.is_multimodal:
@@ -1039,7 +1086,9 @@ def train(attn_implementation=None):
                     tokenizer=tokenizer,
                     args=training_args,
                     **data_module)
-
+    print("========Tunable========")
+    print_tunable_parameters_to_file(model,'param.txt')
+    print("=======================")
     if list(pathlib.Path(training_args.output_dir).glob("checkpoint-*")):
         trainer.train(resume_from_checkpoint=True)
     else:
