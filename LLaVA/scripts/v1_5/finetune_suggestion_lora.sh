@@ -1,7 +1,8 @@
 #!/bin/bash
-
+lora_r=${1:-128}
+lora_alpha=${2:-256}
 deepspeed llava/train/train_mem.py \
-    --lora_enable True --lora_r 128 --lora_alpha 256 --mm_projector_lr 2e-5 \
+    --lora_enable True --lora_r $lora_r --lora_alpha $lora_alpha --mm_projector_lr 2e-5 \
     --deepspeed ./scripts/zero2.json\
     --model_name_or_path liuhaotian/llava-v1.5-7b \
     --version v1 \
