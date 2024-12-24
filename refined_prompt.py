@@ -30,8 +30,8 @@ def clean_response(response: str) -> str:
 def main():
     # Configurations
     base_model_id = "llava-hf/llava-1.5-7b-hf"
-    # ckpt_path = './checkpoints/llava-v1.5-7b-task-lora-exp1-hf'
-    ckpt_path = base_model_id  # model name or path to your model
+    ckpt_path = './checkpoints/llava-v1.5-7b-task-lora-exp1-hf'
+    # ckpt_path = base_model_id  # model name or path to your model
     rag_file = "processed_outputs_v2/match_results.json"
     train_data = "storage/conversations.json"
     metadata_file = "processed_outputs_v2/cleaned_test_metadata.json"

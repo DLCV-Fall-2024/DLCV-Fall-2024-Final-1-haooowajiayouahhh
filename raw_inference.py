@@ -6,7 +6,6 @@ from typing import List, Dict
 from datasets import load_dataset
 import transformers
 from prompt_processor import RAGDataHandler, CODAPromptGenerator
-import argparse
 
 def load_model_and_processor(base_model_id, ckpt_path: str):
     """Load LLaVA model and processor"""
@@ -30,49 +29,38 @@ def clean_response(response: str) -> str:
 
 def main():
     # Configurations
-    parser = argparse.ArgumentParser(description="Inference Configuration")
-    parser.add_argument('--base_model_id', type=str, default="llava-hf/llava-1.5-7b-hf", help='Base model ID')
-    parser.add_argument('--ckpt_path', type=str, default='./checkpoints/r128a256', help='Path to the model checkpoint')
-    parser.add_argument('--rag_file', type=str, default="processed_outputs_v2/match_results.json", help='Path to the RAG file')
-    parser.add_argument('--train_data', type=str, default="storage/conversations.json", help='Path to the training data')
-    parser.add_argument('--metadata_file', type=str, default="processed_outputs_v2/cleaned_test_metadata.json", help='Path to the metadata file')
-    parser.add_argument('--output_path', type=str, default="result/", help='Path to save the output file')
+    base_model_id = "llava-hf/llava-1.5-7b-hf"
+    ckpt_path = './checkpoints/llava-v1.5-7b-task-lora-regional-hf-1224'  # model name or path to your model
+    rag_file = "processed_outputs_v2/match_results.json"
+    train_data = "storage/conversations.json"
+    metadata_file = "processed_outputs_v2/cleaned_test_metadata.json"
+    output_file = "result/submission_regional.json"
     
-    args = parser.parse_args()  # Parse the arguments
-
     print("Loading model and processor...")
-    gen_path = os.path.join(args.ckpt_path, 'llava-v1.5-7b-task-lora-general-hf')
-    reg_path = os.path.join(args.ckpt_path, 'llava-v1.5-7b-task-lora-regional-hf')
-    sug_path = os.path.join(args.ckpt_path, 'llava-v1.5-7b-task-lora-suggestion-hf')
-    gen_model, processor = load_model_and_processor(args.base_model_id, gen_path)  # Use args instead of hardcoded values
-    reg_model, _ = load_model_and_processor(args.base_model_id, reg_path) 
-    sug_model, _ = load_model_and_processor(args.base_model_id, sug_path)     
+    model, processor = load_model_and_processor(base_model_id, ckpt_path)
+    
     # Load metadata if exists
     metadata = {}
-    if os.path.exists(args.metadata_file):  # Use args
-        with open(args.metadata_file, 'r') as f:  # Use args
+    if os.path.exists(metadata_file):
+        with open(metadata_file, 'r') as f:
             metadata = json.load(f)
     
     print("Initializing prompt generator...")
-    rag_handler = RAGDataHandler(args.rag_file, args.train_data)
+    rag_handler = RAGDataHandler(rag_file, train_data)
     prompt_generator = CODAPromptGenerator(rag_handler)
     
     print("Loading test dataset...")
-    dataset = load_dataset("ntudlcv/dlcv_2024_final1", split="test")
+    dataset = load_dataset("ntudlcv/dlcv_2024_final1", split="test[300:600]")
+    dataset = dataset.take(300)
     predictions = {}
     print("Starting inference...")
+    
     with torch.inference_mode():
         for item in tqdm(dataset):
             image = item['image']
             image_id = item['id']
-            task = image_id.split('_')[1]
-            if task == 'general':
-                model = gen_model
-            if task == 'regional':
-                model = reg_model
-            if task == 'suggestion':
-                model = sug_model
-            
+            print(image_id)
+                
             # Generate prompt using prompt processor
             prompt = prompt_generator.generate_prompt(
                 image_id=image_id,
@@ -120,9 +108,8 @@ def main():
                 torch.cuda.empty_cache()
     
     # Save predictions
-    save_path = os.path.join(args.output_path, 'submission.json')
-    print(f"Saving predictions to {save_path}")  
-    with open(save_path, 'w') as f:  # Use args
+    print(f"Saving predictions to {output_file}")
+    with open(output_file, 'w') as f:
         json.dump(predictions, f, indent=2)
     
     print("Inference completed successfully!")
