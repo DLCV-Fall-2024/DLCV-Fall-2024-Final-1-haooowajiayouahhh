@@ -121,8 +121,9 @@ def main():
                 torch.cuda.empty_cache()
     
     # Save predictions
-    os.makedirs(os.path.dirname(args.output_path), exist_ok=True)  # Create directory if it doesn't exist
+ # Create directory if it doesn't exist
     save_path = os.path.join(args.output_path, 'submission.json')
+    os.makedirs(os.path.dirname(save_path), exist_ok=True) 
     print(f"Saving predictions to {save_path}")  
     with open(save_path, 'w') as f:  # Use args
         json.dump(predictions, f, indent=2)
