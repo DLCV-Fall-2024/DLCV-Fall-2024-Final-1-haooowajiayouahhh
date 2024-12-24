@@ -59,6 +59,7 @@ def main():
     
     print("Loading test dataset...")
     dataset = load_dataset("ntudlcv/dlcv_2024_final1", split="test")
+    dataset= dataset.take(5)
     predictions = {}
     print("Starting inference...")
     with torch.inference_mode():
@@ -120,6 +121,7 @@ def main():
                 torch.cuda.empty_cache()
     
     # Save predictions
+    os.makedirs(os.path.dirname(args.output_path), exist_ok=True)  # Create directory if it doesn't exist
     save_path = os.path.join(args.output_path, 'submission.json')
     print(f"Saving predictions to {save_path}")  
     with open(save_path, 'w') as f:  # Use args
