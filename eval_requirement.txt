@@ -1,0 +1,6 @@
+numpy
+Cython
+datasets
+google-generativeai
+scorer
+pycocoevalcap

@@ -182,6 +182,45 @@ class CODAPromptGenerator:
         
         return "\n\n".join(prompt_parts)
 
+class CODAPromptGenerator2:
+    """Main class for generating CODA challenge prompts"""
+    def __init__(self, rag_handler: RAGDataHandler):
+        self.rag_handler = rag_handler
+        self.prompt_builder = PromptBuilder()
+        
+    def generate_prompt(self, image_id: str, metadata: dict) -> str:
+        """Generate complete prompt for a given task"""
+        task_type = image_id.split('_')[1]
+        
+        # Get task-specific components
+        task_description = self.prompt_builder.TASK_DESCRIPTIONS[task_type]
+        example_description = self.prompt_builder.EXAMPLE_DESCRIPTIONS[task_type]
+        
+        # Get examples with match type
+        examples = self.rag_handler.get_similar_examples(image_id)
+        formatted_examples = "\n\n".join([
+            f"Example {i+1}:\n{example}" 
+            for i, (match_type, _, example) in enumerate(examples)
+        ])
+        
+        # Check if metadata exists for this image
+        image_metadata = metadata.get(image_id, {})
+        
+        # Format detected objects with new formatting style
+        if not image_metadata:
+            objects_section = "Note: No objects pre-detected. The above examples are only for format reference. Please analyze the image carefully."
+        else:
+            objects_section = "The following objects have been detected (verify these in the image):\n" + \
+                            self.prompt_builder.format_detected_objects(image_metadata, task_type)
+        
+        # Combine all components
+        prompt_parts = [
+            task_description,
+            objects_section
+        ]
+        
+        return "\n\n".join(prompt_parts)
+
 class RefinedPromptGenerator:
     def __init__(self, rag_handler: RAGDataHandler, input_path):
         self.rag_handler = rag_handler
@@ -193,7 +232,22 @@ class RefinedPromptGenerator:
         task_type = image_id.split('_')[1]
         
         # Get task-specific components
-        task_description = "Refine the description given below by imitate the style, senctence pattern and word choice that the examples showed, only refine the style, in the same time, make the meaning of the content unchanged."
+        TASK_DESCRIPTIONS = {
+        "general": """There is an image of traffic captured from the perspective of the ego car. Focus on objects influencing the ego car's driving behavior: vehicles (cars, trucks, buses, etc.), vulnerable road users (pedestrians, cyclists, motorcyclists), traffic signs (no parking, warning, directional, etc.), traffic lights (red, green, yellow), traffic cones, barriers, miscellaneous(debris, dustbin, animals, etc.). You must not discuss any objects beyond the seven categories above. Please describe each object's appearance, position, direction, and explain why it affects the ego car's behavior.""",
+        
+        "regional": """Please describe the object inside the red rectangle in the image and explain why it affect ego car driving.""",
+        
+        "suggestion": """There is an image of traffic captured from the perspective of the ego car. Focus on objects influencing the ego car's driving behavior: vehicles (cars, trucks, buses, etc.), vulnerable road users (pedestrians, cyclists, motorcyclists), traffic signs (no parking, warning, directional, etc.), traffic lights (red, green, yellow), traffic cones, barriers, miscellaneous(debris, dustbin, animals, etc.). You must not discuss any objects beyond the seven categories above. Please provide driving suggestions for the ego car based on the current scene."""
+        }
+        general_task_description = f"You are handling a task. Task: {TASK_DESCRIPTIONS['general']}. You need to modifiy the description given by imitating the style, sentence pattern, and word choice of the givens examples. Only imitate the style, sentence pattern and word choice, but remain the meaning of the description unchanged."
+        regional_task_description = f"You are handling a task. Task: {TASK_DESCRIPTIONS['general']}. You need to modifiy the description given by imitating the style, sentence pattern, and word choice of the givens examples. Only imitate the style, sentence pattern and word choice, but remain the meaning of the description unchanged." 
+        suggestion_task_description = f"You are handling a task. Task: {TASK_DESCRIPTIONS['general']}. You need to modifiy the description given by imitating the style, sentence pattern, and word choice of the givens examples. Only imitate the style, sentence pattern and word choice, but remain the meaning of the description unchanged." 
+        REFINED_TASK_DESCRIPTIONS={
+            "general": general_task_description,
+            "regional":regional_task_description,
+            "suggestion":suggestion_task_description
+        } 
+        task_description=REFINED_TASK_DESCRIPTIONS[task_type]
         Description ="\n\n"+"Description:\n"+self.unrefined_input[image_id]
         
         # Get examples with match type
