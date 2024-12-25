@@ -32,8 +32,8 @@ def arguments():
     parser.add_argument("--prediction", type=str, default=None)
     parser.add_argument("--dataset_name", type=str, default="ntudlcv/dlcv_2024_final1")
     parser.add_argument("--split", type=str, default="val")
-    # parser.add_argument("--save", type=str, default="gemini_eval.json")
-    parser.add_argument("--api_key", type=str, default=None)
+    parser.add_argument("--save", type=str, default="gemini_eval.json")
+    parser.add_argument("--api_key", type=str, default="AIzaSyBKgbVZR8Uv3GkLSkL4nAOLLbz53KG9uAs")
     return parser.parse_args()
 
 
@@ -60,7 +60,7 @@ if __name__ == "__main__":
     
     # Evaluate
     result = defaultdict(list)
-    # save = {}
+    save = {}
     # fail_cases = []
     for data in reference:
         sample_id = data["id"]
@@ -85,12 +85,12 @@ if __name__ == "__main__":
             # fail_cases.append(sample_id)
         result[sample_type].append(score)
 
-        # save[sample_id] = {
-        #     "prediction": response.text,
-        #     "score": score
-        # }
-        # with open(args.save, "w") as f:
-        #     json.dump(save, f, indent=4)
+        save[sample_id] = {
+            "prediction": response.text,
+            "score": score
+        }
+        with open(args.save, "w") as f:
+            json.dump(save, f, indent=4)
         time.sleep(3)
         NLP_REFERENCE[sample_id] = [data["conversations"][1]["value"]]
 
