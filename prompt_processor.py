@@ -106,8 +106,8 @@ class PromptBuilder:
             obj = metadata[0] if metadata else None
             if not obj:
                 return "No object detected in the marked region. Please analyze the region carefully."
-            position = PromptBuilder.get_position_text(obj['position'])
-            return f"- {PromptBuilder.format_object_count(1, obj['label'])} {position}"
+            # For regional tasks, just return the object label without position
+            return f"- {PromptBuilder.format_object_count(1, obj['label'])}"
             
         # For general and suggestion tasks
         categories = [
@@ -175,6 +175,10 @@ class CODAPromptGenerator:
             "END OF EXAMPLES",
             objects_section
         ]
+        # prompt_parts = [
+        #     task_description,
+        #     objects_section
+        # ]
         
         return "\n\n".join(prompt_parts)
 
@@ -212,9 +216,9 @@ class RefinedPromptGenerator:
 
 def main():
     # Initialize paths
-    rag_file = "processed_outputs_v2/match_results.json"
+    rag_file = "processed_outputs_v3/cleaned_test_rag.json"
     train_data_file = "storage/conversations.json"
-    metadata_file = "processed_outputs_v2/cleaned_test_metadata.json"
+    metadata_file = "processed_outputs_v3/cleaned_test_metadata.json"
     
     # Load data
     with open(metadata_file, 'r') as f:
@@ -233,7 +237,7 @@ def main():
         count = 0
         
         for sample in dataset:
-            if count >= 1:  # Test 2 examples per task
+            if count >= 5:  # Test 2 examples per task
                 break
                 
             image_id = sample['id']
