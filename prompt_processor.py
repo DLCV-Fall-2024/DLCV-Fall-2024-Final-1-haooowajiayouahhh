@@ -168,17 +168,17 @@ class CODAPromptGenerator:
                             self.prompt_builder.format_detected_objects(image_metadata, task_type)
         
         # Combine all components
-        prompt_parts = [
-            task_description,
-            example_description,
-            formatted_examples,
-            "END OF EXAMPLES",
-            objects_section
-        ]
         # prompt_parts = [
         #     task_description,
+        #     example_description,
+        #     formatted_examples,
+        #     "END OF EXAMPLES",
         #     objects_section
         # ]
+        prompt_parts = [
+            task_description,
+            # objects_section
+        ]
         
         return "\n\n".join(prompt_parts)
 
