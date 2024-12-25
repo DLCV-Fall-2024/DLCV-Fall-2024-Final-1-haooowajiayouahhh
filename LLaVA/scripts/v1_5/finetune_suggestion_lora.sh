@@ -1,6 +1,8 @@
 #!/bin/bash
-lora_r=${1:-128}
-lora_alpha=${2:-256}
+lora_r=$1
+lora_alpha=$2
+metadata_file=$3
+rag_path=$4
 deepspeed llava/train/train_mem.py \
     --lora_enable True --lora_r $lora_r --lora_alpha $lora_alpha --mm_projector_lr 2e-5 \
     --deepspeed ./scripts/zero2.json\
@@ -36,6 +38,6 @@ deepspeed llava/train/train_mem.py \
     --dataloader_num_workers 4 \
     --lazy_preprocess True \
     --report_to wandb\
-    --metadata_file /workspace/DLCV-Fall-2024-Final-1-haooowajiayouahhh/processed_outputs_v2/cleaned_train_metadata.json\
-    --rag_path /workspace/DLCV-Fall-2024-Final-1-haooowajiayouahhh/processed_outputs_v2/train_match_results.json  \
+    --metadata_file $metadata_file\
+    --rag_path $rag_path  \
     --train_conversation_file /workspace/DLCV-Fall-2024-Final-1-haooowajiayouahhh/storage/conversations.json \
