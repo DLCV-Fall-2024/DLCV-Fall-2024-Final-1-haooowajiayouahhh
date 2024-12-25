@@ -106,8 +106,8 @@ class PromptBuilder:
             obj = metadata[0] if metadata else None
             if not obj:
                 return "No object detected in the marked region. Please analyze the region carefully."
-            # For regional tasks, just return the object label without position
-            return f"- {PromptBuilder.format_object_count(1, obj['label'])}"
+            position = PromptBuilder.get_position_text(obj['position'])
+            return f"- {PromptBuilder.format_object_count(1, obj['label'])} {position}"
             
         # For general and suggestion tasks
         categories = [
