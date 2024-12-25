@@ -32,7 +32,7 @@ def main():
     # Configurations
     parser = argparse.ArgumentParser(description="Inference Configuration")
     parser.add_argument('--base_model_id', type=str, default="llava-hf/llava-1.5-7b-hf", help='Base model ID')
-    parser.add_argument('--ckpt_path', type=str, default='./checkpoints/r128a256', help='Path to the model checkpoint')
+    parser.add_argument('--ckpt_path', type=str, default='./checkpoints/r128a256/checkpoints', help='Path to the model checkpoint')
     parser.add_argument('--rag_file', type=str, default="processed_outputs_v2/match_results.json", help='Path to the RAG file')
     parser.add_argument('--train_data', type=str, default="storage/conversations.json", help='Path to the training data')
     parser.add_argument('--metadata_file', type=str, default="processed_outputs_v2/cleaned_test_metadata.json", help='Path to the metadata file')
@@ -59,7 +59,7 @@ def main():
     
     print("Loading test dataset...")
     dataset = load_dataset("ntudlcv/dlcv_2024_final1", split="test")
-    dataset= dataset.take(5)
+    # dataset= dataset.take()
     predictions = {}
     print("Starting inference...")
     with torch.inference_mode():
@@ -68,10 +68,13 @@ def main():
             image_id = item['id']
             task = image_id.split('_')[1]
             if task == 'general':
+                print(task, image_id)
                 model = gen_model
             if task == 'regional':
+                print(task, image_id)                
                 model = reg_model
             if task == 'suggestion':
+                print(task, image_id)            
                 model = sug_model
             
             # Generate prompt using prompt processor

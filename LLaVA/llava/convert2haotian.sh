@@ -1,0 +1,4 @@
+#!/bin/bash
+python3 convert_haotian2hf.py --old_model_ckpt_path ../../checkpoints/r8a16/checkpoints/llava-v1.5-7b-task-lora-general/ --save_path ../../checkpoints/r8a16/checkpoints/llava-v1.5-7b-task-lora-general-hf
+python3 convert_haotian2hf.py --old_model_ckpt_path ../../checkpoints/r8a16/checkpoints/llava-v1.5-7b-task-lora-regional/ --save_path ../../checkpoints/r8a16/checkpoints/llava-v1.5-7b-task-lora-regional-hf
+python3 convert_haotian2hf.py --old_model_ckpt_path ../../checkpoints/r8a16/checkpoints/llava-v1.5-7b-task-lora-suggestion/ --save_path ../../checkpoints/r8a16/checkpoints/llava-v1.5-7b-task-lora-suggestion-hf
