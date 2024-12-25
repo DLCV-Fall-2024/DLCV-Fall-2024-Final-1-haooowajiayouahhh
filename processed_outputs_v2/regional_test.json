@@ -1,0 +1,1442 @@
+{
+ "Test_regional_0": [
+  {
+   "predicted_label": "traffic cone",
+   "position": 8
+  }
+ ],
+ "Test_regional_1": [
+  {
+   "predicted_label": "motorcycle",
+   "position": 5
+  }
+ ],
+ "Test_regional_2": [
+  {
+   "predicted_label": "car",
+   "position": 3
+  }
+ ],
+ "Test_regional_3": [
+  {
+   "predicted_label": "bollard",
+   "position": 8
+  }
+ ],
+ "Test_regional_4": [
+  {
+   "predicted_label": "traffic box",
+   "position": 8
+  }
+ ],
+ "Test_regional_5": [],
+ "Test_regional_6": [
+  {
+   "predicted_label": "pedestrian",
+   "position": 4
+  }
+ ],
+ "Test_regional_7": [
+  {
+   "predicted_label": "car",
+   "position": 3
+  }
+ ],
+ "Test_regional_8": [
+  {
+   "predicted_label": "barrier",
+   "position": 6
+  }
+ ],
+ "Test_regional_9": [],
+ "Test_regional_10": [],
+ "Test_regional_11": [
+  {
+   "predicted_label": "construction vehicle",
+   "position": 4
+  }
+ ],
+ "Test_regional_12": [
+  {
+   "predicted_label": "moped",
+   "position": 5
+  }
+ ],
+ "Test_regional_13": [],
+ "Test_regional_14": [
+  {
+   "predicted_label": "traffic sign",
+   "position": 4
+  }
+ ],
+ "Test_regional_15": [
+  {
+   "predicted_label": "bollard",
+   "position": 5
+  }
+ ],
+ "Test_regional_16": [
+  {
+   "predicted_label": "car",
+   "position": 3
+  }
+ ],
+ "Test_regional_17": [
+  {
+   "predicted_label": "barrier",
+   "position": 5
+  }
+ ],
+ "Test_regional_18": [
+  {
+   "predicted_label": "suv",
+   "position": 4
+  }
+ ],
+ "Test_regional_19": [
+  {
+   "predicted_label": "car",
+   "position": 5
+  }
+ ],
+ "Test_regional_20": [],
+ "Test_regional_21": [
+  {
+   "predicted_label": "car",
+   "position": 4
+  }
+ ],
+ "Test_regional_22": [
+  {
+   "predicted_label": "traffic cone",
+   "position": 4
+  }
+ ],
+ "Test_regional_23": [],
+ "Test_regional_24": [
+  {
+   "predicted_label": "recreational vehicle",
+   "position": 4
+  }
+ ],
+ "Test_regional_25": [
+  {
+   "predicted_label": "barrier",
+   "position": 6
+  }
+ ],
+ "Test_regional_26": [
+  {
+   "predicted_label": "car",
+   "position": 3
+  }
+ ],
+ "Test_regional_27": [
+  {
+   "predicted_label": "bollard",
+   "position": 6
+  }
+ ],
+ "Test_regional_28": [
+  {
+   "predicted_label": "construction vehicle",
+   "position": 7
+  }
+ ],
+ "Test_regional_29": [
+  {
+   "predicted_label": "pedestrian",
+   "position": 7
+  }
+ ],
+ "Test_regional_30": [
+  {
+   "predicted_label": "traffic cone",
+   "position": 5
+  }
+ ],
+ "Test_regional_31": [
+  {
+   "predicted_label": "pedestrian",
+   "position": 4
+  }
+ ],
+ "Test_regional_32": [
+  {
+   "predicted_label": "pedestrian",
+   "position": 8
+  }
+ ],
+ "Test_regional_33": [
+  {
+   "predicted_label": "traffic cone",
+   "position": 4
+  }
+ ],
+ "Test_regional_34": [
+  {
+   "predicted_label": "bollard",
+   "position": 6
+  }
+ ],
+ "Test_regional_35": [],
+ "Test_regional_36": [
+  {
+   "predicted_label": "car",
+   "position": 3
+  }
+ ],
+ "Test_regional_37": [
+  {
+   "predicted_label": "car",
+   "position": 3
+  }
+ ],
+ "Test_regional_38": [
+  {
+   "predicted_label": "bollard",
+   "position": 4
+  }
+ ],
+ "Test_regional_39": [],
+ "Test_regional_40": [
+  {
+   "predicted_label": "traffic cone",
+   "position": 5
+  }
+ ],
+ "Test_regional_41": [
+  {
+   "predicted_label": "bus",
+   "position": 5
+  }
+ ],
+ "Test_regional_42": [
+  {
+   "predicted_label": "construction vehicle",
+   "position": 8
+  }
+ ],
+ "Test_regional_43": [
+  {
+   "predicted_label": "pedestrian",
+   "position": 4
+  }
+ ],
+ "Test_regional_44": [
+  {
+   "predicted_label": "traffic cone",
+   "position": 7
+  }
+ ],
+ "Test_regional_45": [],
+ "Test_regional_46": [
+  {
+   "predicted_label": "construction vehicle",
+   "position": 3
+  }
+ ],
+ "Test_regional_47": [
+  {
+   "predicted_label": "dustbin",
+   "position": 3
+  }
+ ],
+ "Test_regional_48": [
+  {
+   "predicted_label": "bollard",
+   "position": 4
+  }
+ ],
+ "Test_regional_49": [
+  {
+   "predicted_label": "cyclist",
+   "position": 5
+  }
+ ],
+ "Test_regional_50": [
+  {
+   "predicted_label": "tricycle",
+   "position": 3
+  }
+ ],
+ "Test_regional_51": [
+  {
+   "predicted_label": "traffic box",
+   "position": 4
+  }
+ ],
+ "Test_regional_52": [
+  {
+   "predicted_label": "construction vehicle",
+   "position": 3
+  }
+ ],
+ "Test_regional_53": [
+  {
+   "predicted_label": "traffic cone",
+   "position": 8
+  }
+ ],
+ "Test_regional_54": [
+  {
+   "predicted_label": "car",
+   "position": 4
+  }
+ ],
+ "Test_regional_55": [
+  {
+   "predicted_label": "pedestrian",
+   "position": 5
+  }
+ ],
+ "Test_regional_56": [],
+ "Test_regional_57": [
+  {
+   "predicted_label": "traffic cone",
+   "position": 5
+  }
+ ],
+ "Test_regional_58": [],
+ "Test_regional_59": [
+  {
+   "predicted_label": "car",
+   "position": 5
+  }
+ ],
+ "Test_regional_60": [
+  {
+   "predicted_label": "car",
+   "position": 4
+  }
+ ],
+ "Test_regional_61": [
+  {
+   "predicted_label": "car",
+   "position": 4
+  }
+ ],
+ "Test_regional_62": [],
+ "Test_regional_63": [],
+ "Test_regional_64": [],
+ "Test_regional_65": [
+  {
+   "predicted_label": "pedestrian",
+   "position": 7
+  }
+ ],
+ "Test_regional_66": [
+  {
+   "predicted_label": "traffic cone",
+   "position": 6
+  }
+ ],
+ "Test_regional_67": [
+  {
+   "predicted_label": "traffic cone",
+   "position": 8
+  }
+ ],
+ "Test_regional_68": [
+  {
+   "predicted_label": "car",
+   "position": 3
+  }
+ ],
+ "Test_regional_69": [],
+ "Test_regional_70": [],
+ "Test_regional_71": [
+  {
+   "predicted_label": "construction vehicle",
+   "position": 3
+  }
+ ],
+ "Test_regional_72": [
+  {
+   "predicted_label": "suv",
+   "position": 7
+  }
+ ],
+ "Test_regional_73": [
+  {
+   "predicted_label": "traffic cone",
+   "position": 8
+  }
+ ],
+ "Test_regional_74": [
+  {
+   "predicted_label": "pedestrian",
+   "position": 4
+  }
+ ],
+ "Test_regional_75": [
+  {
+   "predicted_label": "car",
+   "position": 4
+  }
+ ],
+ "Test_regional_76": [
+  {
+   "predicted_label": "traffic cone",
+   "position": 4
+  }
+ ],
+ "Test_regional_77": [
+  {
+   "predicted_label": "suv",
+   "position": 7
+  }
+ ],
+ "Test_regional_78": [],
+ "Test_regional_79": [],
+ "Test_regional_80": [],
+ "Test_regional_81": [
+  {
+   "predicted_label": "bollard",
+   "position": 8
+  }
+ ],
+ "Test_regional_82": [],
+ "Test_regional_83": [
+  {
+   "predicted_label": "car",
+   "position": 4
+  }
+ ],
+ "Test_regional_84": [
+  {
+   "predicted_label": "car",
+   "position": 4
+  }
+ ],
+ "Test_regional_85": [],
+ "Test_regional_86": [],
+ "Test_regional_87": [
+  {
+   "predicted_label": "traffic cone",
+   "position": 8
+  }
+ ],
+ "Test_regional_88": [
+  {
+   "predicted_label": "barrier",
+   "position": 6
+  }
+ ],
+ "Test_regional_89": [
+  {
+   "predicted_label": "car",
+   "position": 4
+  }
+ ],
+ "Test_regional_90": [
+  {
+   "predicted_label": "car",
+   "position": 4
+  }
+ ],
+ "Test_regional_91": [
+  {
+   "predicted_label": "traffic cone",
+   "position": 6
+  }
+ ],
+ "Test_regional_92": [
+  {
+   "predicted_label": "car",
+   "position": 4
+  }
+ ],
+ "Test_regional_93": [],
+ "Test_regional_94": [
+  {
+   "predicted_label": "car",
+   "position": 3
+  }
+ ],
+ "Test_regional_95": [
+  {
+   "predicted_label": "traffic light",
+   "position": 4
+  }
+ ],
+ "Test_regional_96": [
+  {
+   "predicted_label": "traffic cone",
+   "position": 7
+  }
+ ],
+ "Test_regional_97": [
+  {
+   "predicted_label": "pedestrian",
+   "position": 5
+  }
+ ],
+ "Test_regional_98": [
+  {
+   "predicted_label": "traffic cone",
+   "position": 8
+  }
+ ],
+ "Test_regional_99": [],
+ "Test_regional_100": [
+  {
+   "predicted_label": "dustbin",
+   "position": 5
+  }
+ ],
+ "Test_regional_101": [
+  {
+   "predicted_label": "traffic cone",
+   "position": 3
+  }
+ ],
+ "Test_regional_102": [
+  {
+   "predicted_label": "car",
+   "position": 5
+  }
+ ],
+ "Test_regional_103": [],
+ "Test_regional_104": [
+  {
+   "predicted_label": "car",
+   "position": 3
+  }
+ ],
+ "Test_regional_105": [
+  {
+   "predicted_label": "car",
+   "position": 4
+  }
+ ],
+ "Test_regional_106": [
+  {
+   "predicted_label": "suv",
+   "position": 3
+  }
+ ],
+ "Test_regional_107": [
+  {
+   "predicted_label": "car",
+   "position": 5
+  }
+ ],
+ "Test_regional_108": [
+  {
+   "predicted_label": "traffic cone",
+   "position": 4
+  }
+ ],
+ "Test_regional_109": [
+  {
+   "predicted_label": "traffic island",
+   "position": 4
+  }
+ ],
+ "Test_regional_110": [
+  {
+   "predicted_label": "bus",
+   "position": 5
+  }
+ ],
+ "Test_regional_111": [],
+ "Test_regional_112": [],
+ "Test_regional_113": [
+  {
+   "predicted_label": "pedestrian",
+   "position": 5
+  }
+ ],
+ "Test_regional_114": [],
+ "Test_regional_115": [
+  {
+   "predicted_label": "pedestrian",
+   "position": 5
+  }
+ ],
+ "Test_regional_116": [
+  {
+   "predicted_label": "traffic sign",
+   "position": 5
+  }
+ ],
+ "Test_regional_117": [
+  {
+   "predicted_label": "pedestrian",
+   "position": 5
+  }
+ ],
+ "Test_regional_118": [],
+ "Test_regional_119": [],
+ "Test_regional_120": [
+  {
+   "predicted_label": "traffic cone",
+   "position": 7
+  }
+ ],
+ "Test_regional_121": [
+  {
+   "predicted_label": "traffic cone",
+   "position": 6
+  }
+ ],
+ "Test_regional_122": [
+  {
+   "predicted_label": "bus",
+   "position": 4
+  }
+ ],
+ "Test_regional_123": [],
+ "Test_regional_124": [],
+ "Test_regional_125": [
+  {
+   "predicted_label": "car",
+   "position": 4
+  }
+ ],
+ "Test_regional_126": [
+  {
+   "predicted_label": "traffic cone",
+   "position": 4
+  }
+ ],
+ "Test_regional_127": [
+  {
+   "predicted_label": "pedestrian",
+   "position": 4
+  }
+ ],
+ "Test_regional_128": [
+  {
+   "predicted_label": "traffic cone",
+   "position": 5
+  }
+ ],
+ "Test_regional_129": [
+  {
+   "predicted_label": "barrier",
+   "position": 5
+  }
+ ],
+ "Test_regional_130": [],
+ "Test_regional_131": [
+  {
+   "predicted_label": "wheelchair",
+   "position": 4
+  }
+ ],
+ "Test_regional_132": [
+  {
+   "predicted_label": "bicycle",
+   "position": 4
+  }
+ ],
+ "Test_regional_133": [
+  {
+   "predicted_label": "pedestrian",
+   "position": 5
+  }
+ ],
+ "Test_regional_134": [
+  {
+   "predicted_label": "traffic light",
+   "position": 4
+  }
+ ],
+ "Test_regional_135": [
+  {
+   "predicted_label": "traffic cone",
+   "position": 3
+  }
+ ],
+ "Test_regional_136": [
+  {
+   "predicted_label": "cyclist",
+   "position": 8
+  }
+ ],
+ "Test_regional_137": [],
+ "Test_regional_138": [
+  {
+   "predicted_label": "pedestrian",
+   "position": 4
+  }
+ ],
+ "Test_regional_139": [
+  {
+   "predicted_label": "traffic cone",
+   "position": 7
+  }
+ ],
+ "Test_regional_140": [],
+ "Test_regional_141": [
+  {
+   "predicted_label": "pedestrian",
+   "position": 5
+  }
+ ],
+ "Test_regional_142": [
+  {
+   "predicted_label": "car",
+   "position": 4
+  }
+ ],
+ "Test_regional_143": [
+  {
+   "predicted_label": "construction vehicle",
+   "position": 4
+  }
+ ],
+ "Test_regional_144": [
+  {
+   "predicted_label": "pedestrian",
+   "position": 5
+  }
+ ],
+ "Test_regional_145": [
+  {
+   "predicted_label": "car",
+   "position": 4
+  }
+ ],
+ "Test_regional_146": [
+  {
+   "predicted_label": "bus",
+   "position": 4
+  }
+ ],
+ "Test_regional_147": [
+  {
+   "predicted_label": "bollard",
+   "position": 3
+  }
+ ],
+ "Test_regional_148": [
+  {
+   "predicted_label": "car",
+   "position": 3
+  }
+ ],
+ "Test_regional_149": [
+  {
+   "predicted_label": "pedestrian",
+   "position": 5
+  }
+ ],
+ "Test_regional_150": [
+  {
+   "predicted_label": "truck",
+   "position": 4
+  }
+ ],
+ "Test_regional_151": [],
+ "Test_regional_152": [
+  {
+   "predicted_label": "car",
+   "position": 4
+  }
+ ],
+ "Test_regional_153": [
+  {
+   "predicted_label": "traffic cone",
+   "position": 3
+  }
+ ],
+ "Test_regional_154": [
+  {
+   "predicted_label": "pedestrian",
+   "position": 4
+  }
+ ],
+ "Test_regional_155": [
+  {
+   "predicted_label": "pedestrian",
+   "position": 3
+  }
+ ],
+ "Test_regional_156": [],
+ "Test_regional_157": [],
+ "Test_regional_158": [],
+ "Test_regional_159": [],
+ "Test_regional_160": [
+  {
+   "predicted_label": "bollard",
+   "position": 4
+  }
+ ],
+ "Test_regional_161": [],
+ "Test_regional_162": [
+  {
+   "predicted_label": "traffic island",
+   "position": 5
+  }
+ ],
+ "Test_regional_163": [
+  {
+   "predicted_label": "traffic cone",
+   "position": 8
+  }
+ ],
+ "Test_regional_164": [
+  {
+   "predicted_label": "traffic light",
+   "position": 8
+  }
+ ],
+ "Test_regional_165": [],
+ "Test_regional_166": [],
+ "Test_regional_167": [
+  {
+   "predicted_label": "construction vehicle",
+   "position": 4
+  }
+ ],
+ "Test_regional_168": [],
+ "Test_regional_169": [
+  {
+   "predicted_label": "traffic island",
+   "position": 3
+  }
+ ],
+ "Test_regional_170": [],
+ "Test_regional_171": [
+  {
+   "predicted_label": "bus",
+   "position": 4
+  }
+ ],
+ "Test_regional_172": [
+  {
+   "predicted_label": "cyclist",
+   "position": 4
+  }
+ ],
+ "Test_regional_173": [
+  {
+   "predicted_label": "bollard",
+   "position": 6
+  }
+ ],
+ "Test_regional_174": [
+  {
+   "predicted_label": "concrete block",
+   "position": 7
+  }
+ ],
+ "Test_regional_175": [],
+ "Test_regional_176": [],
+ "Test_regional_177": [
+  {
+   "predicted_label": "car",
+   "position": 3
+  }
+ ],
+ "Test_regional_178": [],
+ "Test_regional_179": [],
+ "Test_regional_180": [
+  {
+   "predicted_label": "truck",
+   "position": 3
+  }
+ ],
+ "Test_regional_181": [],
+ "Test_regional_182": [],
+ "Test_regional_183": [
+  {
+   "predicted_label": "car",
+   "position": 3
+  }
+ ],
+ "Test_regional_184": [
+  {
+   "predicted_label": "truck",
+   "position": 4
+  }
+ ],
+ "Test_regional_185": [
+  {
+   "predicted_label": "construction vehicle",
+   "position": 3
+  }
+ ],
+ "Test_regional_186": [
+  {
+   "predicted_label": "traffic light",
+   "position": 4
+  }
+ ],
+ "Test_regional_187": [
+  {
+   "predicted_label": "traffic island",
+   "position": 3
+  }
+ ],
+ "Test_regional_188": [],
+ "Test_regional_189": [],
+ "Test_regional_190": [],
+ "Test_regional_191": [
+  {
+   "predicted_label": "car",
+   "position": 5
+  }
+ ],
+ "Test_regional_192": [],
+ "Test_regional_193": [
+  {
+   "predicted_label": "construction vehicle",
+   "position": 4
+  }
+ ],
+ "Test_regional_194": [
+  {
+   "predicted_label": "traffic island",
+   "position": 5
+  }
+ ],
+ "Test_regional_195": [
+  {
+   "predicted_label": "traffic cone",
+   "position": 6
+  }
+ ],
+ "Test_regional_196": [
+  {
+   "predicted_label": "car",
+   "position": 4
+  }
+ ],
+ "Test_regional_197": [
+  {
+   "predicted_label": "moped",
+   "position": 8
+  }
+ ],
+ "Test_regional_198": [
+  {
+   "predicted_label": "construction vehicle",
+   "position": 3
+  }
+ ],
+ "Test_regional_199": [
+  {
+   "predicted_label": "pedestrian",
+   "position": 5
+  }
+ ],
+ "Test_regional_200": [],
+ "Test_regional_201": [
+  {
+   "predicted_label": "traffic cone",
+   "position": 6
+  }
+ ],
+ "Test_regional_202": [],
+ "Test_regional_203": [],
+ "Test_regional_204": [],
+ "Test_regional_205": [
+  {
+   "predicted_label": "traffic light",
+   "position": 4
+  }
+ ],
+ "Test_regional_206": [
+  {
+   "predicted_label": "traffic cone",
+   "position": 4
+  }
+ ],
+ "Test_regional_207": [
+  {
+   "predicted_label": "barrier",
+   "position": 3
+  }
+ ],
+ "Test_regional_208": [
+  {
+   "predicted_label": "barrier",
+   "position": 4
+  }
+ ],
+ "Test_regional_209": [
+  {
+   "predicted_label": "traffic cone",
+   "position": 7
+  }
+ ],
+ "Test_regional_210": [
+  {
+   "predicted_label": "construction vehicle",
+   "position": 4
+  }
+ ],
+ "Test_regional_211": [
+  {
+   "predicted_label": "bollard",
+   "position": 6
+  }
+ ],
+ "Test_regional_212": [
+  {
+   "predicted_label": "car",
+   "position": 7
+  }
+ ],
+ "Test_regional_213": [
+  {
+   "predicted_label": "traffic light",
+   "position": 8
+  }
+ ],
+ "Test_regional_214": [
+  {
+   "predicted_label": "construction vehicle",
+   "position": 7
+  }
+ ],
+ "Test_regional_215": [
+  {
+   "predicted_label": "construction vehicle",
+   "position": 5
+  }
+ ],
+ "Test_regional_216": [],
+ "Test_regional_217": [
+  {
+   "predicted_label": "construction vehicle",
+   "position": 6
+  }
+ ],
+ "Test_regional_218": [
+  {
+   "predicted_label": "dog",
+   "position": 7
+  }
+ ],
+ "Test_regional_219": [
+  {
+   "predicted_label": "construction vehicle",
+   "position": 4
+  }
+ ],
+ "Test_regional_220": [
+  {
+   "predicted_label": "moped",
+   "position": 4
+  }
+ ],
+ "Test_regional_221": [
+  {
+   "predicted_label": "construction vehicle",
+   "position": 3
+  }
+ ],
+ "Test_regional_222": [
+  {
+   "predicted_label": "bollard",
+   "position": 6
+  }
+ ],
+ "Test_regional_223": [
+  {
+   "predicted_label": "car",
+   "position": 6
+  }
+ ],
+ "Test_regional_224": [
+  {
+   "predicted_label": "pedestrian",
+   "position": 6
+  }
+ ],
+ "Test_regional_225": [
+  {
+   "predicted_label": "construction vehicle",
+   "position": 5
+  }
+ ],
+ "Test_regional_226": [],
+ "Test_regional_227": [
+  {
+   "predicted_label": "dustbin",
+   "position": 3
+  }
+ ],
+ "Test_regional_228": [
+  {
+   "predicted_label": "traffic cone",
+   "position": 8
+  }
+ ],
+ "Test_regional_229": [],
+ "Test_regional_230": [
+  {
+   "predicted_label": "construction vehicle",
+   "position": 3
+  }
+ ],
+ "Test_regional_231": [
+  {
+   "predicted_label": "construction vehicle",
+   "position": 4
+  }
+ ],
+ "Test_regional_232": [
+  {
+   "predicted_label": "dog",
+   "position": 7
+  }
+ ],
+ "Test_regional_233": [
+  {
+   "predicted_label": "construction vehicle",
+   "position": 6
+  }
+ ],
+ "Test_regional_234": [
+  {
+   "predicted_label": "construction vehicle",
+   "position": 3
+  }
+ ],
+ "Test_regional_235": [
+  {
+   "predicted_label": "construction vehicle",
+   "position": 4
+  }
+ ],
+ "Test_regional_236": [
+  {
+   "predicted_label": "construction vehicle",
+   "position": 4
+  }
+ ],
+ "Test_regional_237": [
+  {
+   "predicted_label": "cyclist",
+   "position": 7
+  }
+ ],
+ "Test_regional_238": [
+  {
+   "predicted_label": "traffic island",
+   "position": 4
+  }
+ ],
+ "Test_regional_239": [
+  {
+   "predicted_label": "construction vehicle",
+   "position": 7
+  }
+ ],
+ "Test_regional_240": [
+  {
+   "predicted_label": "traffic cone",
+   "position": 7
+  }
+ ],
+ "Test_regional_241": [],
+ "Test_regional_242": [],
+ "Test_regional_243": [
+  {
+   "predicted_label": "traffic cone",
+   "position": 7
+  }
+ ],
+ "Test_regional_244": [
+  {
+   "predicted_label": "construction vehicle",
+   "position": 5
+  }
+ ],
+ "Test_regional_245": [
+  {
+   "predicted_label": "traffic island",
+   "position": 6
+  }
+ ],
+ "Test_regional_246": [
+  {
+   "predicted_label": "traffic cone",
+   "position": 6
+  }
+ ],
+ "Test_regional_247": [],
+ "Test_regional_248": [
+  {
+   "predicted_label": "construction vehicle",
+   "position": 4
+  }
+ ],
+ "Test_regional_249": [
+  {
+   "predicted_label": "car",
+   "position": 3
+  }
+ ],
+ "Test_regional_250": [
+  {
+   "predicted_label": "barrier",
+   "position": 4
+  }
+ ],
+ "Test_regional_251": [
+  {
+   "predicted_label": "traffic cone",
+   "position": 7
+  }
+ ],
+ "Test_regional_252": [],
+ "Test_regional_253": [
+  {
+   "predicted_label": "construction vehicle",
+   "position": 4
+  }
+ ],
+ "Test_regional_254": [
+  {
+   "predicted_label": "car",
+   "position": 3
+  }
+ ],
+ "Test_regional_255": [
+  {
+   "predicted_label": "suv",
+   "position": 6
+  }
+ ],
+ "Test_regional_256": [
+  {
+   "predicted_label": "construction vehicle",
+   "position": 4
+  }
+ ],
+ "Test_regional_257": [
+  {
+   "predicted_label": "traffic island",
+   "position": 8
+  }
+ ],
+ "Test_regional_258": [
+  {
+   "predicted_label": "truck",
+   "position": 4
+  }
+ ],
+ "Test_regional_259": [
+  {
+   "predicted_label": "dustbin",
+   "position": 7
+  }
+ ],
+ "Test_regional_260": [
+  {
+   "predicted_label": "dustbin",
+   "position": 8
+  }
+ ],
+ "Test_regional_261": [
+  {
+   "predicted_label": "pedestrian",
+   "position": 3
+  }
+ ],
+ "Test_regional_262": [
+  {
+   "predicted_label": "car",
+   "position": 3
+  }
+ ],
+ "Test_regional_263": [
+  {
+   "predicted_label": "car",
+   "position": 4
+  }
+ ],
+ "Test_regional_264": [],
+ "Test_regional_265": [
+  {
+   "predicted_label": "car",
+   "position": 4
+  }
+ ],
+ "Test_regional_266": [
+  {
+   "predicted_label": "traffic cone",
+   "position": 6
+  }
+ ],
+ "Test_regional_267": [
+  {
+   "predicted_label": "bollard",
+   "position": 8
+  }
+ ],
+ "Test_regional_268": [
+  {
+   "predicted_label": "car",
+   "position": 3
+  }
+ ],
+ "Test_regional_269": [
+  {
+   "predicted_label": "car",
+   "position": 4
+  }
+ ],
+ "Test_regional_270": [
+  {
+   "predicted_label": "traffic sign",
+   "position": 3
+  }
+ ],
+ "Test_regional_271": [],
+ "Test_regional_272": [
+  {
+   "predicted_label": "car",
+   "position": 4
+  }
+ ],
+ "Test_regional_273": [],
+ "Test_regional_274": [
+  {
+   "predicted_label": "suv",
+   "position": 4
+  }
+ ],
+ "Test_regional_275": [
+  {
+   "predicted_label": "traffic sign",
+   "position": 4
+  }
+ ],
+ "Test_regional_276": [],
+ "Test_regional_277": [
+  {
+   "predicted_label": "cart",
+   "position": 5
+  }
+ ],
+ "Test_regional_278": [
+  {
+   "predicted_label": "construction vehicle",
+   "position": 4
+  }
+ ],
+ "Test_regional_279": [
+  {
+   "predicted_label": "traffic cone",
+   "position": 5
+  }
+ ],
+ "Test_regional_280": [
+  {
+   "predicted_label": "bollard",
+   "position": 4
+  }
+ ],
+ "Test_regional_281": [
+  {
+   "predicted_label": "suv",
+   "position": 4
+  }
+ ],
+ "Test_regional_282": [
+  {
+   "predicted_label": "barrier",
+   "position": 5
+  }
+ ],
+ "Test_regional_283": [
+  {
+   "predicted_label": "bollard",
+   "position": 6
+  }
+ ],
+ "Test_regional_284": [
+  {
+   "predicted_label": "bollard",
+   "position": 3
+  }
+ ],
+ "Test_regional_285": [
+  {
+   "predicted_label": "barrier",
+   "position": 5
+  }
+ ],
+ "Test_regional_286": [
+  {
+   "predicted_label": "pedestrian",
+   "position": 5
+  }
+ ],
+ "Test_regional_287": [
+  {
+   "predicted_label": "car",
+   "position": 5
+  }
+ ],
+ "Test_regional_288": [
+  {
+   "predicted_label": "traffic cone",
+   "position": 6
+  }
+ ],
+ "Test_regional_289": [
+  {
+   "predicted_label": "suv",
+   "position": 3
+  }
+ ],
+ "Test_regional_290": [
+  {
+   "predicted_label": "traffic cone",
+   "position": 6
+  }
+ ],
+ "Test_regional_291": [
+  {
+   "predicted_label": "car",
+   "position": 5
+  }
+ ],
+ "Test_regional_292": [
+  {
+   "predicted_label": "traffic cone",
+   "position": 5
+  }
+ ],
+ "Test_regional_293": [
+  {
+   "predicted_label": "construction vehicle",
+   "position": 3
+  }
+ ],
+ "Test_regional_294": [
+  {
+   "predicted_label": "traffic island",
+   "position": 5
+  }
+ ],
+ "Test_regional_295": [
+  {
+   "predicted_label": "traffic cone",
+   "position": 8
+  }
+ ],
+ "Test_regional_296": [
+  {
+   "predicted_label": "bus",
+   "position": 3
+  }
+ ],
+ "Test_regional_297": [
+  {
+   "predicted_label": "traffic cone",
+   "position": 6
+  }
+ ],
+ "Test_regional_298": [],
+ "Test_regional_299": []
+}
