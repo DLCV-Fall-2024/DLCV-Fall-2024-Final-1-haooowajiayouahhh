@@ -15,6 +15,8 @@ pip install --upgrade Pillow
 pip install gdown
 ```
 ## Download ckpt and run
+
+unzip and gdown should be installed
 ```bash
 cd ..
 bash download_ckpt.sh
