@@ -12,6 +12,7 @@ pip install transformers==4.46.0
 pip install accelerate==0.26.0
 pip install protobuf==3.20.*
 pip install --upgrade Pillow
+pip install gdown
 ```
 ## Download ckpt and run
 ```bash
