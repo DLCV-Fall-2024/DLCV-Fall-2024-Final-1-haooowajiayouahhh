@@ -69,3 +69,8 @@ model.to('cuda', dtype=torch.float16)
 ```
 
 
+# Inference
+```bash
+bash download_ckpt.sh
+bash inference.sh
+```
