@@ -1,3 +1,55 @@
+# Inference
+
+## Setup Environment
+```bash
+conda create -n myenv python=3.11
+cd LLaVA/
+pip install -r llava_requirements.txt
+pip install -e .
+pip install -e ".[train]"
+pip install flash-attn --no-build-isolation
+pip install transformers==4.46.0
+pip install accelerate==0.26.0
+pip install protobuf==3.20.*
+pip install --upgrade Pillow
+```
+## Download ckpt and run
+```bash
+cd ..
+bash download_ckpt.sh
+bash inference.sh
+```
+
+# finetune model
+1. cd LLaVA
+2. ensure you have convdata train_metadata and rag_results (already pushed to github...)
+3. modify the --task in scripts/v1_5/finetune_lora_hf.sh (task: 'general', 'regional', 'suggestion')
+4. modify the --output_dir
+
+
+#haotian2hf
+1. cd LLaVA/llava
+2. run 
+```bash
+python3 convert_haotian2hf.py --old_ckpt_dir "path to the ckptdir of haotianllava" --save_path "a path to save the result"
+```
+3. or just import function convert_llava_llama_to_hf(), it will return a prepared llava model and processor
+4. Caution!!! the model need to transform to torch.float16 when you use it.
+for example,
+```bash
+condition 1:
+model, processor=convert_llava_llama_to_hf()
+model.to("cuda", dtype=torch.float16)
+
+condition 2:
+model = LlavaForConditionalGeneration.from_pretrained("llava-hf/llava-1.5-7b-hf")
+state_dict = torch.load(state_dict_path, map_location="cpu")
+model.load_state_dict(state_dict, strict=True, assign=True)
+model.to('cuda', dtype=torch.float16)
+```
+
+# Preprocess
+
 # utils/viz_embed.py: 
 Using ViT to encode training images in datasets
 ```bash
@@ -29,64 +81,4 @@ Set the config:
     
 ```bash
 python3 rag_usage.py
-```
-
-#Inference
-1. install checkpoints dir (ask murphy)
-2. generate rag_results, a json file that tell which examples are chosen by vit embedding. (use rag_usage.py to generate it, or use the one that store at ./storage/*_rag_test.json)
-3.generate convdata (use utils/get_convdata.py, or use the one store at ./storage/conversations.json )
-4. run run run
-```bash
-python3 inference.py --output_path --checkpoint_dir --batch_size --device --rag_results --convdata
-```
-
-# finetune model
-1. cd LLaVA
-2. ensure you have convdata train_metadata and rag_results (already pushed to github...)
-3. modify the --task in scripts/v1_5/finetune_lora_hf.sh (task: 'general', 'regional', 'suggestion')
-4. modify the --output_dir
-
-
-#haotian2hf
-1. cd LLaVA/llava
-2. run 
-```bash
-python3 convert_haotian2hf.py --old_ckpt_dir "path to the ckptdir of haotianllava" --save_path "a path to save the result"
-```
-3. or just import function convert_llava_llama_to_hf(), it will return a prepared llava model and processor
-4. Caution!!! the model need to transform to torch.float16 when you use it.
-for example,
-```bash
-condition 1:
-model, processor=convert_llava_llama_to_hf()
-model.to("cuda", dtype=torch.float16)
-
-condition 2:
-model = LlavaForConditionalGeneration.from_pretrained("llava-hf/llava-1.5-7b-hf")
-state_dict = torch.load(state_dict_path, map_location="cpu")
-model.load_state_dict(state_dict, strict=True, assign=True)
-model.to('cuda', dtype=torch.float16)
-```
-
-
-# Inference
-
-## Setup Environment
-```bash
-conda create -n myenv python=3.11
-cd LLaVA/
-pip install -r llava_requirements.txt
-pip install -e .
-pip install -e ".[train]"
-pip install flash-attn --no-build-isolation
-pip install transformers==4.46.0
-pip install accelerate==0.26.0
-pip install protobuf==3.20.*
-pip install --upgrade Pillow
-```
-## Download ckpt and run
-```bash
-cd ..
-bash download_ckpt.sh
-bash inference.sh
 ```
