@@ -17,7 +17,7 @@ gdown $regional_id -O ./checkpoints/llava-v1.5-7b-task-lora-regional-hf.zip
 # Unzip the files
 unzip ./checkpoints/llava-v1.5-7b-task-lora-general-hf.zip -d ./checkpoints/
 unzip ./checkpoints/llava-v1.5-7b-task-lora-suggestion-hf.zip -d ./checkpoints/
-unzip ./checkpoints/llava-v1.5-7b-task-lora-regional-hf-d.zip ./checkpoints/
+unzip ./checkpoints/llava-v1.5-7b-task-lora-regional-hf.zip -d ./checkpoints/
 
 # Remove the zip files
 
