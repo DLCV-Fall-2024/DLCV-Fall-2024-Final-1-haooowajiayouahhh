@@ -1,16 +1,23 @@
-file_id_1=""
-file_id_2=""
-file_id_3=""
+general_id="1n6ZWSvfmTVKD1AF737VA9ge6ChisJRuN"
+suggestion_id="1XMuhCplnn82pyyun_GupxT5Q1jdKqE_Y"
+regional_id="1S-DNglTZShUyjYtISREiacP_KntOvOC_"
+
+# general:
+# https://drive.google.com/file/d/1n6ZWSvfmTVKD1AF737VA9ge6ChisJRuN/view?usp=sharing
+# suggestion:
+# https://drive.google.com/file/d/1XMuhCplnn82pyyun_GupxT5Q1jdKqE_Y/view?usp=sharing
+# regional:
+# https://drive.google.com/file/d/1S-DNglTZShUyjYtISREiacP_KntOvOC_/view?usp=sharing
 
 # Download the files
-gdown --id $file_id_1 --O ./checkpoints/llava-v1.5-7b-task-lora-general-hf.zip
-gdown --id $file_id_2 --O ./checkpoints/llava-v1.5-7b-task-lora-suggestion-hf.zip
-gdown --id $file_id_3 --O ./checkpoints/llava-v1.5-7b-task-lora-regional-hf.zip
+gdown --id $general_id --O ./checkpoints/llava-v1.5-7b-task-lora-general-hf.zip
+gdown --id $suggestion_id --O ./checkpoints/llava-v1.5-7b-task-lora-suggestion-hf.zip
+gdown --id $regional_id --O ./checkpoints/llava-v1.5-7b-task-lora-regional-hf.zip
 
 # Unzip the files
-unzip ./checkpoints/llava-v1.5-7b-task-lora-general-hf -d ./checkpoints/
-unzip ./checkpoints/llava-v1.5-7b-task-lora-suggestion-hf -d ./checkpoints/
-unzip ./checkpoints/llava-v1.5-7b-task-lora-regional-hf-d ./checkpoints/
+unzip ./checkpoints/llava-v1.5-7b-task-lora-general-hf.zip -d ./checkpoints/
+unzip ./checkpoints/llava-v1.5-7b-task-lora-suggestion-hf.zip -d ./checkpoints/
+unzip ./checkpoints/llava-v1.5-7b-task-lora-regional-hf-d.zip ./checkpoints/
 
 # Remove the zip files
 
