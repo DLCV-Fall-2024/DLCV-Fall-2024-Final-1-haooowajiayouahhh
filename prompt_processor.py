@@ -177,7 +177,7 @@ class CODAPromptGenerator:
         # ]
         prompt_parts = [
             task_description,
-            # objects_section
+            objects_section
         ]
         
         return "\n\n".join(prompt_parts)
