@@ -24,8 +24,15 @@ bash inference.sh
 # finetune model
 1. cd LLaVA
 2. ensure you have convdata train_metadata and rag_results (already pushed to github...)
-3. modify the --task in scripts/v1_5/finetune_lora_hf.sh (task: 'general', 'regional', 'suggestion')
-4. modify the --output_dir
+3. To finetune LoRAs on different tasks, choose and run the corresponding training script 
+
+```bash
+bash scripts/v1_5/finetune_{task_name}_lora.sh $1 $2 $3 $4
+#$1: lora_rank $2:lora_alpha $3: metadata_file $4: rag_file 
+# task_name: general, regional, suggestion 
+```
+
+4. you can modify the --output_dir in the finetune script to specify the output checkpoint dir
 
 
 #haotian2hf
