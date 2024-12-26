@@ -1,1 +1,1 @@
-python3 inferenc.py 
+python3 inference.py 
