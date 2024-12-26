@@ -10,9 +10,9 @@ regional_id="1S-DNglTZShUyjYtISREiacP_KntOvOC_"
 # https://drive.google.com/file/d/1S-DNglTZShUyjYtISREiacP_KntOvOC_/view?usp=sharing
 
 # Download the files
-gdown --id $general_id --O ./checkpoints/llava-v1.5-7b-task-lora-general-hf.zip
-gdown --id $suggestion_id --O ./checkpoints/llava-v1.5-7b-task-lora-suggestion-hf.zip
-gdown --id $regional_id --O ./checkpoints/llava-v1.5-7b-task-lora-regional-hf.zip
+gdown $general_id -O ./checkpoints/llava-v1.5-7b-task-lora-general-hf.zip
+gdown $suggestion_id -O ./checkpoints/llava-v1.5-7b-task-lora-suggestion-hf.zip
+gdown $regional_id -O ./checkpoints/llava-v1.5-7b-task-lora-regional-hf.zip
 
 # Unzip the files
 unzip ./checkpoints/llava-v1.5-7b-task-lora-general-hf.zip -d ./checkpoints/
