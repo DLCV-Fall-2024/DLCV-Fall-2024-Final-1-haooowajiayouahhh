@@ -32,10 +32,10 @@ def main():
     # Configurations
     parser = argparse.ArgumentParser(description="Inference Configuration")
     parser.add_argument('--base_model_id', type=str, default="llava-hf/llava-1.5-7b-hf", help='Base model ID')
-    parser.add_argument('--ckpt_path', type=str, default='./checkpoints/r128a256/checkpoints', help='Path to the model checkpoint')
-    parser.add_argument('--rag_file', type=str, default="processed_outputs_v2/match_results.json", help='Path to the RAG file')
+    parser.add_argument('--ckpt_path', type=str, default='./checkpoints/', help='Path to the model checkpoint')
+    parser.add_argument('--rag_file', type=str, default="processed_outputs_v3/match_results.json", help='Path to the RAG file')
     parser.add_argument('--train_data', type=str, default="storage/conversations.json", help='Path to the training data')
-    parser.add_argument('--metadata_file', type=str, default="processed_outputs_v2/cleaned_test_metadata.json", help='Path to the metadata file')
+    parser.add_argument('--metadata_file', type=str, default="processed_outputs_v3/cleaned_test_metadata.json", help='Path to the metadata file')
     parser.add_argument('--output_path', type=str, default="result/", help='Path to save the output file')
     
     args = parser.parse_args()  # Parse the arguments
